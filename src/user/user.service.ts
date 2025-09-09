@@ -7,17 +7,10 @@ import { Model } from 'mongoose';
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async getUserByIdentifier(
-    identifier: string,
-    type: 'username' | 'email' | 'id',
-  ) {
-    let user: User | null = null;
-    if (type === 'id') user = await this.userModel.findOne({ id: identifier });
-    else if (type === 'email')
-      user = await this.userModel.findOne({ email: identifier });
-    else if (type === 'username')
-      user = await this.userModel.findOne({ username: identifier });
-    else throw new Error('An Invalid identifier type was just passed');
+  async findByIdentifier(identifier: string) {
+    const user = await this.userModel.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
 
     return user;
   }

@@ -1,3 +1,4 @@
+import { createZodDto } from 'nestjs-zod';
 import { email, password, username } from 'src/user/DTOs/user.fields';
 import z from 'zod';
 
@@ -6,4 +7,5 @@ export const LoginInputValidator = z.object({
   password: password,
 });
 
-export type LoginInputDto = z.infer<typeof LoginInputValidator>;
+export class LoginInputDto extends createZodDto(LoginInputValidator) {}
+// export type LoginInputDto = z.infer<typeof LoginInputValidator>;
