@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginInputDto } from './DTOs/loginInput.dto';
 import { UserService } from '../user/user.service';
 import { hasher } from 'src/config/hasher';
@@ -37,13 +41,15 @@ export class AuthService {
   async login({ identifier, password }: LoginInputDto) {
     const user = await this.userService.findByIdentifier(identifier);
 
-    if (!user) throw new Error('User not found');
+    if (!user) throw new UnauthorizedException('Invalid Credentials');
 
     // TODO: make custom error for this
     if (!user?.passwordHash)
-      throw new Error("User doesn't have a defined password");
+      throw new UnauthorizedException(
+        'User Has Not Configured Email Authentication',
+      );
     else if (!(await hasher.verify(password, user?.passwordHash)))
-      throw new Error('Invalid password');
+      throw new UnauthorizedException('Invalid Password');
     else
       return {
         ...(await this.generateTokens(user.id as string)),
@@ -53,7 +59,7 @@ export class AuthService {
   async signup({ email, password }: SignupInputDto) {
     const user = await this.userService.findByIdentifier(email);
 
-    if (user) throw new Error('User already exists');
+    if (user) throw new ConflictException('User Already Exists');
 
     return await this.userService.create({ email, password });
   }
