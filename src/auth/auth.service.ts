@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service';
 import { hasher } from 'src/config/hasher';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { SignupInputDto } from './DTOs/signupInput.dto';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +34,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async login({ identifier, password }: LoginInputDto): Promise<any> {
+  async login({ identifier, password }: LoginInputDto) {
     const user = await this.userService.findByIdentifier(identifier);
 
     if (!user) throw new Error('User not found');
@@ -47,5 +48,13 @@ export class AuthService {
       return {
         ...(await this.generateTokens(user.id as string)),
       };
+  }
+
+  async signup({ email, password }: SignupInputDto) {
+    const user = await this.userService.findByIdentifier(email);
+
+    if (user) throw new Error('User already exists');
+
+    return await this.userService.create({ email, password });
   }
 }

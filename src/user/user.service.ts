@@ -14,4 +14,11 @@ export class UserService {
 
     return user;
   }
+
+  async create({ email, password }: { email: string; password: string }) {
+    return await this.userModel.create({
+      email,
+      password,
+    });
+  }
 }
