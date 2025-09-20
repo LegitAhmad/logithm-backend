@@ -9,12 +9,13 @@ export class User {
   name: string;
 
   @Prop({
-    required: true,
+    required: false,
     lowercase: true,
     trim: true,
     minLength: 3,
     maxLength: 16,
     unique: true,
+    sparse: true,
     match: /^[a-zA-Z0-9_]+$/,
   })
   username: string;
