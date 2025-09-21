@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { hasher } from 'src/config/hasher';
 
 @Injectable()
 export class UserService {
@@ -16,9 +17,10 @@ export class UserService {
   }
 
   async create({ email, password }: { email: string; password: string }) {
+    const passHash = await hasher.hash(password);
     return await this.userModel.create({
       email,
-      password,
+      passwordHash: passHash,
     });
   }
 }

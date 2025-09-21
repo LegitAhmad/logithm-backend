@@ -1,4 +1,13 @@
-import { Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { type PaginationDto } from 'src/common/DTOs/paginationDto';
 
 @Controller('courses')
 export class CourseController {
@@ -6,7 +15,7 @@ export class CourseController {
   async create() {}
 
   @Get()
-  async getAll() {}
+  async getAll(@Query() paginationDto: PaginationDto) {}
 
   @Get(':id')
   async getOne(@Param(':id') id: string) {}

@@ -13,6 +13,7 @@ export class AuthController {
   @Post('/login')
   @ApiProperty({ type: [LoginInputDto] })
   async login(@Body() body: LoginInputDto) {
+    console.log('haha');
     const res = await this.authService.login(body);
     return res;
   }

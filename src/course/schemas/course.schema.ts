@@ -1,11 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 
-export type UserDocument = HydratedDocument<User>;
+export type CourseDocument = HydratedDocument<Course>;
 
 @Schema({ timestamps: true })
-export class User {
-  @Prop({ trim: true, minLength: 3, maxLength: 24 })
+export class Course {
+  @Prop({ trim: true, minLength: 3, maxLength: 50 })
   name: string;
 
   @Prop({
@@ -30,11 +30,11 @@ export class User {
   })
   email: string;
 
-  @Prop({ trim: true, required: false })
+  @Prop({ trim: true })
   passwordHash: string;
 
   @Prop({ required: true, default: false })
   isVerified: boolean;
 }
 
-export const UserSchema = SchemaFactory.createForClass(User);
+export const CourseSchema = SchemaFactory.createForClass(Course);
