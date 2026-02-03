@@ -43,7 +43,7 @@ export class Course {
     ref: 'User',
     required: true,
   })
-  creator: Types.ObjectId;
+  creatorId: Types.ObjectId;
 
   @Prop({
     type: [Types.ObjectId],

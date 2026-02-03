@@ -24,7 +24,7 @@ async function bootstrap() {
         type: 'http', // 'http' for bearer auth
         in: 'header',
       },
-      'access-token', // This name here is important for matching with @ApiBearerAuth()
+      'jwt-auth', // This name here is important for matching with @ApiBearerAuth()
     )
     .build();
   const document = SwaggerModule.createDocument(app, config);

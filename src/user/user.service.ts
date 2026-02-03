@@ -9,13 +9,12 @@ export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async findByIdentifier(identifier: string) {
-    const user = await this.userModel.findOne({
-      $or: [
-        { _id: identifier },
-        { username: identifier },
-        { email: identifier },
-      ],
+    let user = await this.userModel.findOne({
+      $or: [{ username: identifier }, { email: identifier }],
     });
+    if (!user) {
+      user = await this.userModel.findOne({ _id: identifier });
+    }
 
     return user;
   }
