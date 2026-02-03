@@ -5,17 +5,22 @@ import {
   Param,
   Patch,
   Post,
-  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { type PaginationDto } from 'src/common/DTOs/paginationDto';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/utils/decorators/create-param.decorator';
 
 @Controller('courses')
 export class CourseController {
   @Post()
-  async create() {}
+  @UseGuards(JwtAuthGuard)
+  async create(@CurrentUser() user: any) {
+    console.log('muhehe');
+  }
 
   @Get()
-  async getAll(@Query() paginationDto: PaginationDto) {}
+  @UseGuards(JwtAuthGuard)
+  async getUserCourses() {}
 
   @Get(':id')
   async getOne(@Param(':id') id: string) {}

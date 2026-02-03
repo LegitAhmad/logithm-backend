@@ -14,6 +14,18 @@ async function bootstrap() {
     .setDescription('The API for Logithm')
     .setVersion('1.0')
     .addTag('logithm')
+    .addBearerAuth(
+      {
+        // Description for the field in Swagger UI
+        description: `Please enter token in following format: Bearer <JWT>`,
+        name: 'Authorization',
+        bearerFormat: 'Bearer', // Optional, arbitrary value for documentation
+        scheme: 'Bearer',
+        type: 'http', // 'http' for bearer auth
+        in: 'header',
+      },
+      'access-token', // This name here is important for matching with @ApiBearerAuth()
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, cleanupOpenApiDoc(document));

@@ -6,7 +6,7 @@ import {
 import { LoginInputDto } from './DTOs/loginInput.dto';
 import { UserService } from '../user/user.service';
 import { hasher } from 'src/config/hasher';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SignupInputDto } from './DTOs/signupInput.dto';
 
@@ -19,21 +19,15 @@ export class AuthService {
   ) {}
 
   async generateTokens(userId: string) {
-    const accessToken = await this.jwtService.signAsync(
-      { sub: userId },
-      {
-        secret: this.configService.get<string>('jwtAccessSecret'),
-        expiresIn: this.configService.get<string>('jwtAccessExpiresIn'),
-      },
-    );
+    const accessToken = await this.jwtService.signAsync({ sub: userId }, {
+      secret: this.configService.get<string>('jwtAccessSecret'),
+      expiresIn: this.configService.get<string>('jwtAccessExpiresIn'),
+    } as JwtSignOptions);
 
-    const refreshToken = await this.jwtService.signAsync(
-      { sub: userId },
-      {
-        secret: this.configService.get<string>('jwtRefreshSecret'),
-        expiresIn: this.configService.get<string>('jwtRefreshExpiresIn'),
-      },
-    );
+    const refreshToken = await this.jwtService.signAsync({ sub: userId }, {
+      secret: this.configService.get<string>('jwtRefreshSecret'),
+      expiresIn: this.configService.get<string>('jwtRefreshExpiresIn'),
+    } as JwtSignOptions);
 
     return { accessToken, refreshToken };
   }

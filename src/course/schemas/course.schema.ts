@@ -1,40 +1,80 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type CourseDocument = HydratedDocument<Course>;
 
 @Schema({ timestamps: true })
 export class Course {
-  @Prop({ trim: true, minLength: 3, maxLength: 50 })
-  name: string;
-
-  @Prop({
-    required: false,
-    lowercase: true,
-    trim: true,
-    minLength: 3,
-    maxLength: 16,
-    unique: true,
-    sparse: true,
-    match: /^[a-zA-Z0-9_]+$/,
-  })
-  username: string;
+  // req info
 
   @Prop({
     required: true,
-    unique: true,
-    lowercase: true,
     trim: true,
-    minLength: 5,
-    maxLength: 254,
+    minlength: 3,
+    maxlength: 80,
   })
-  email: string;
+  name: string;
 
-  @Prop({ trim: true })
-  passwordHash: string;
+  @Prop({
+    trim: true,
+    maxlength: 500,
+    default: "Welcome to this awesome course! Let's get codin'!",
+  })
+  description: string;
 
-  @Prop({ required: true, default: false })
-  isVerified: boolean;
+  @Prop({
+    default: '',
+  })
+  bannerUrl: string;
+
+  @Prop({
+    required: true,
+  })
+  startDate: Date;
+
+  @Prop({
+    required: true,
+  })
+  endDate: Date;
+
+  // users
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'User',
+    required: true,
+  })
+  creator: Types.ObjectId;
+
+  @Prop({
+    type: [Types.ObjectId],
+    ref: 'User',
+    default: [],
+    validate: {
+      validator: (v: Types.ObjectId[]) => v.length <= 5,
+      message: 'A course can have at most 5 admins',
+    },
+  })
+  admins: Types.ObjectId[];
+
+  @Prop({
+    type: [Types.ObjectId],
+    ref: 'Assignment',
+    default: [],
+  })
+  assignments: Types.ObjectId[];
+
+  @Prop({
+    unique: true,
+    sparse: true,
+    uppercase: true,
+    length: 8,
+  })
+  joinCode: string;
+
+  @Prop({
+    default: true,
+  })
+  isActive: boolean;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
