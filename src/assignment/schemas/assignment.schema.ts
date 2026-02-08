@@ -1,93 +1,53 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+// assignments.schema.ts
 
-export type AssignmentDocument = HydratedDocument<Assignment>;
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types, Document } from 'mongoose';
+
+export type AssignmentDocument = Assignment & Document;
+
+export enum AssignmentStatus {
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+  ACTIVE = 'active',
+  CLOSED = 'closed',
+}
 
 @Schema({ timestamps: true })
 export class Assignment {
-  // required shit
-  @Prop({
-    required: true,
-    trim: true,
-    minlength: 3,
-    maxlength: 100,
-  })
+  @Prop({ required: true })
   title: string;
 
-  @Prop({
-    trim: true,
-    maxlength: 1000,
-    default: '',
-  })
-  description: string;
+  @Prop()
+  description?: string;
 
-  // owner information
-  @Prop({
-    type: Types.ObjectId,
-    ref: 'User',
-    required: true,
-  })
-  creator: Types.ObjectId;
+  // For now required, later optional
+  @Prop({ type: Types.ObjectId, ref: 'Course', required: true })
+  courseId: Types.ObjectId;
 
-  // optional course
-  @Prop({
-    type: Types.ObjectId,
-    ref: 'Course',
-    default: null,
-  })
-  course: Types.ObjectId | null;
-
-  // timing
-  @Prop({
-    required: true,
-  })
-  startTime: Date;
+  @Prop([{ type: Types.ObjectId, ref: 'Question' }])
+  questionIds: Types.ObjectId[];
 
   @Prop({
-    required: true,
+    enum: AssignmentStatus,
+    default: AssignmentStatus.DRAFT,
   })
-  deadline: Date;
+  status: AssignmentStatus;
 
-  // Questions linked
-  @Prop({
-    type: [Types.ObjectId],
-    ref: 'Question',
-    default: [],
-  })
-  questions: Types.ObjectId[];
+  // When made public
+  @Prop()
+  publishedAt?: Date;
 
-  @Prop({
-    unique: true,
-    sparse: true,
-    uppercase: true,
-    length: 7,
-  })
-  assignmentCode: string;
+  // When students can start
+  @Prop()
+  startAt?: Date;
 
-  // Hide questions after deadline
-  @Prop({
-    default: false,
-  })
-  hideAfterDeadline: boolean;
+  // Deadline
+  @Prop()
+  deadline?: Date;
 
-  // Hide before start (usually true)
-  @Prop({
-    default: true,
-  })
-  hideBeforeStart: boolean;
-
-  // Original assignment (if cloned)
-  @Prop({
-    type: Types.ObjectId,
-    ref: 'Assignment',
-    default: null,
-  })
-  parentAssignment: Types.ObjectId | null;
-
-  @Prop({
-    default: true,
-  })
-  isActive: boolean;
+  // Who created it
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  ownerId: Types.ObjectId;
 }
 
 export const AssignmentSchema = SchemaFactory.createForClass(Assignment);

@@ -13,7 +13,9 @@ import { randomBytes } from 'crypto';
 
 @Injectable()
 export class CourseService {
-  constructor(@InjectModel(Course.name) private courseModel: Model<Course>) {}
+  constructor(
+    @InjectModel(Course.name) private readonly courseModel: Model<Course>,
+  ) {}
 
   private async generateUniqueJoinCode(): Promise<string> {
     let code = '';
