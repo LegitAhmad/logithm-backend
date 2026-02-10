@@ -1,9 +1,15 @@
 // assignments.schema.ts
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types, Document } from 'mongoose';
+import { Types, HydratedDocument } from 'mongoose';
 
-export type AssignmentDocument = Assignment & Document;
+export interface AssignmentTimestamps {
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type AssignmentDocument = HydratedDocument<Assignment> &
+  AssignmentTimestamps;
 
 export enum AssignmentStatus {
   DRAFT = 'draft',
@@ -24,7 +30,7 @@ export class Assignment {
   @Prop({ type: Types.ObjectId, ref: 'Course', required: true })
   courseId: Types.ObjectId;
 
-  @Prop([{ type: Types.ObjectId, ref: 'Question' }])
+  @Prop({ type: [Types.ObjectId], ref: 'Question', default: [] })
   questionIds: Types.ObjectId[];
 
   @Prop({

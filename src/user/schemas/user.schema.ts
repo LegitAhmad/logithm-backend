@@ -6,7 +6,10 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ timestamps: true })
 export class User {
   @Prop({ trim: true, minLength: 3, maxLength: 24 })
-  name: string;
+  firstName: string;
+
+  @Prop({ trim: true, minLength: 3, maxLength: 24 })
+  lastName: string;
 
   @Prop({
     required: false,

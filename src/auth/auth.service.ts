@@ -32,6 +32,15 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async refresh(userId: string) {
+    const accessToken = await this.jwtService.signAsync({ sub: userId }, {
+      secret: this.configService.get<string>('jwtAccessSecret'),
+      expiresIn: this.configService.get<string>('jwtAccessExpiresIn'),
+    } as JwtSignOptions);
+
+    return { accessToken };
+  }
+
   async login({ identifier, password }: LoginInputDto) {
     const user = await this.userService.findByIdentifier(identifier);
 
@@ -46,11 +55,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Password');
     else
       return {
-        ...(await this.generateTokens(user.id as string)),
+        ...(await this.generateTokens(user._id.toString())),
       };
   }
 
   async signup({ email, password }: SignupInputDto) {
+    console.log(email);
     const user = await this.userService.findByIdentifier(email);
 
     if (user) throw new ConflictException('User Already Exists');

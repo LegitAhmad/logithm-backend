@@ -53,11 +53,21 @@ export class AssignmentService {
     const realStatus = this.computeStatus(assignment);
 
     return {
-      ...assignment.toObject(),
+      _id: assignment._id.toString(),
+      title: assignment.title,
+      description: assignment.description ?? null,
+      courseId: assignment.courseId.toString(),
+      questionIds: assignment.questionIds.map((id) => id.toString()),
+      status: assignment.status,
+      publishedAt: assignment.publishedAt?.toISOString() ?? null,
+      startAt: assignment.startAt?.toISOString() ?? null,
+      deadline: assignment.deadline?.toISOString() ?? null,
       realStatus,
       isActive: realStatus === AssignmentStatus.ACTIVE,
       isExpired: realStatus === AssignmentStatus.CLOSED,
-    } as AssignmentResponseDto;
+      createdAt: assignment.createdAt.toISOString(),
+      updatedAt: assignment.updatedAt.toISOString(),
+    };
   }
 
   /* ---------------------------------- Queries ---------------------------------- */
@@ -67,7 +77,7 @@ export class AssignmentService {
       ownerId: userId,
     });
 
-    const refinedList = list.map((a) => this.format(a));
+    const refinedList = list.map((a) => this.format(a as AssignmentDocument));
     return refinedList;
   }
 
@@ -77,7 +87,7 @@ export class AssignmentService {
       status: { $ne: AssignmentStatus.DRAFT },
     });
 
-    return list.map((a) => this.format(a));
+    return list.map((a) => this.format(a as AssignmentDocument));
   }
 
   async getOne(id: string, userId: string) {
@@ -95,7 +105,7 @@ export class AssignmentService {
       throw new ForbiddenException();
     }
 
-    return this.format(assignment);
+    return this.format(assignment as AssignmentDocument);
   }
 
   /* --------------------------------- Mutations --------------------------------- */
@@ -107,7 +117,7 @@ export class AssignmentService {
       status: AssignmentStatus.DRAFT,
     });
 
-    return this.format(assignment);
+    return this.format(assignment as AssignmentDocument);
   }
 
   async updateDraft(id: string, dto: UpdateAssignmentDto, userId: string) {
@@ -115,7 +125,7 @@ export class AssignmentService {
 
     if (!assignment) throw new NotFoundException();
 
-    this.assertOwner(assignment, userId);
+    this.assertOwner(assignment as AssignmentDocument, userId);
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Only drafts can be edited');
@@ -125,7 +135,7 @@ export class AssignmentService {
 
     await assignment.save();
 
-    return this.format(assignment);
+    return this.format(assignment as AssignmentDocument);
   }
 
   async publish(id: string, dto: PublishAssignmentDto, userId: string) {
@@ -133,7 +143,7 @@ export class AssignmentService {
 
     if (!assignment) throw new NotFoundException();
 
-    this.assertOwner(assignment, userId);
+    this.assertOwner(assignment as AssignmentDocument, userId);
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Already published');
@@ -166,7 +176,7 @@ export class AssignmentService {
 
     await assignment.save();
 
-    return this.format(assignment);
+    return this.format(assignment as AssignmentDocument);
   }
 
   async unpublish(id: string, userId: string) {
@@ -174,7 +184,7 @@ export class AssignmentService {
 
     if (!assignment) throw new NotFoundException();
 
-    this.assertOwner(assignment, userId);
+    this.assertOwner(assignment as AssignmentDocument, userId);
 
     if (assignment.status !== AssignmentStatus.PUBLISHED) {
       throw new BadRequestException('Cannot unpublish now');
@@ -192,7 +202,7 @@ export class AssignmentService {
 
     await assignment.save();
 
-    return this.format(assignment);
+    return this.format(assignment as AssignmentDocument);
   }
 
   async deleteDraft(id: string, userId: string) {
@@ -200,7 +210,7 @@ export class AssignmentService {
 
     if (!assignment) throw new NotFoundException();
 
-    this.assertOwner(assignment, userId);
+    this.assertOwner(assignment as AssignmentDocument, userId);
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Only drafts can be deleted');

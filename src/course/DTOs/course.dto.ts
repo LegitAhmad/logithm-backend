@@ -11,7 +11,7 @@ const BaseCourse = z.object({
   bannerUrl: z.string(),
   startDate: zDateString,
   endDate: zDateString,
-  creator: z.string(), // ID as string
+  creatorId: z.string(), // ID as string
   isActive: z.boolean(),
   createdAt: zDateString,
 });
@@ -43,7 +43,7 @@ export class PaginatedCourseResponseDto {
 
 export const CreateCourseSchema = BaseCourse.omit({
   _id: true,
-  creator: true,
+  creatorId: true,
   isActive: true,
   createdAt: true,
 });

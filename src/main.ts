@@ -30,6 +30,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, cleanupOpenApiDoc(document));
 
+  app.enableCors({
+    origin: 'http://localhost:4200', // The URL of your Angular app
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
   await app.listen(port!);
   console.log(`The server is running at port ${port}.`);
 }

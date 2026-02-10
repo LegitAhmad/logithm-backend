@@ -58,6 +58,13 @@ export class Course {
 
   @Prop({
     type: [Types.ObjectId],
+    ref: 'User',
+    default: [],
+  })
+  students: Types.ObjectId[];
+
+  @Prop({
+    type: [Types.ObjectId],
     ref: 'Assignment',
     default: [],
   })

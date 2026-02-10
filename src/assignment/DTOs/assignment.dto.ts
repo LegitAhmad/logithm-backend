@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { zObjectId } from 'src/utils/zodHelpers';
+import { createZodDto } from 'nestjs-zod';
 
 export const CreateAssignmentSchema = z.object({
   title: z.string().min(3, 'Title too short').max(200),
@@ -11,7 +12,7 @@ export const CreateAssignmentSchema = z.object({
   questionIds: z.array(zObjectId).optional(),
 });
 
-export type CreateAssignmentDto = z.infer<typeof CreateAssignmentSchema>;
+export class CreateAssignmentDto extends createZodDto(CreateAssignmentSchema) {}
 
 export const UpdateAssignmentSchema = z
   .object({
@@ -23,7 +24,7 @@ export const UpdateAssignmentSchema = z
   })
   .strict();
 
-export type UpdateAssignmentDto = z.infer<typeof UpdateAssignmentSchema>;
+export class UpdateAssignmentDto extends createZodDto(UpdateAssignmentSchema) {}
 
 export const PublishAssignmentSchema = z
   .object({
@@ -44,19 +45,21 @@ export const PublishAssignmentSchema = z
     },
   );
 
-export type PublishAssignmentDto = z.infer<typeof PublishAssignmentSchema>;
+export class PublishAssignmentDto extends createZodDto(
+  PublishAssignmentSchema,
+) {}
 
 export const AssignmentQuerySchema = z.object({
   status: z.enum(['draft', 'published', 'active', 'closed']).optional(),
 
   courseId: zObjectId.optional(),
 
-  page: z.string().regex(/^\d+$/).transform(Number).default(1),
+  page: z.string().regex(/^\d+$/).default('1'),
 
-  limit: z.string().regex(/^\d+$/).transform(Number).default(20),
+  limit: z.string().regex(/^\d+$/).default('20'),
 });
 
-export type AssignmentQueryDto = z.infer<typeof AssignmentQuerySchema>;
+export class AssignmentQueryDto extends createZodDto(AssignmentQuerySchema) {}
 
 export const AssignmentResponseSchema = z.object({
   _id: z.string(),
@@ -83,4 +86,6 @@ export const AssignmentResponseSchema = z.object({
   updatedAt: z.string(),
 });
 
-export type AssignmentResponseDto = z.infer<typeof AssignmentResponseSchema>;
+export class AssignmentResponseDto extends createZodDto(
+  AssignmentResponseSchema,
+) {}

@@ -53,7 +53,7 @@ export class CourseService {
 
     const newCourse = new this.courseModel({
       ...dto,
-      creator: creatorId,
+      creatorId: creatorId,
       joinCode,
       admins: [creatorId],
     });
@@ -63,8 +63,8 @@ export class CourseService {
 
   async getCoursesByUser(userId: string, limit: number, offset: number) {
     return this.courseModel
-      .find({ owner: userId })
-      .select('-assignments -students')
+      .find({ creatorId: userId })
+      .select('-assignments')
       .skip(offset)
       .limit(limit)
       .exec();
