@@ -67,6 +67,7 @@ export class CourseController {
     const cleanCourses = courses.map((course) =>
       CourseResponseDto.create(course.toObject()),
     );
+    console.log(cleanCourses);
 
     return {
       limit,

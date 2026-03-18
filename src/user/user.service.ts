@@ -49,18 +49,24 @@ export class UserService {
    * -------------------------------------
    */
 
-  async findPublicProfile(username: string) {
+  async findPublicProfile(identifier: string) {
+    const isObjectId = Types.ObjectId.isValid(identifier);
+
+    const query = isObjectId ? { _id: identifier } : { username: identifier };
+
     const user = await this.userModel
-      .findOne({ username })
+      .findOne(query)
       .select(
         'username name bio avatarUrl githubUrl linkedinUrl website createdAt',
       )
       .lean();
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     return user;
   }
-
   /*
    * -------------------------------------
    * SELF USER METHODS

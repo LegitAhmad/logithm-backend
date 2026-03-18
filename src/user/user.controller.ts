@@ -15,7 +15,7 @@ export class UserController {
   constructor(private readonly users: UserService) {}
 
   // Public profile
-  @Get(':username')
+  @Get(':id')
   getByUsername(@Param('username') username: string) {
     return this.users.findPublicProfile(username);
   }

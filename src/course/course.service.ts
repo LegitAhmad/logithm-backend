@@ -62,12 +62,14 @@ export class CourseService {
   }
 
   async getCoursesByUser(userId: string, limit: number, offset: number) {
-    return this.courseModel
+    const v = await this.courseModel
       .find({ creatorId: userId })
       .select('-assignments')
       .skip(offset)
       .limit(limit)
       .exec();
+    console.log(v);
+    return v;
   }
 
   async getCourseById(id: string) {

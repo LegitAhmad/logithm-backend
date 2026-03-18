@@ -11,7 +11,7 @@ const BaseCourse = z.object({
   bannerUrl: z.string(),
   startDate: zDateString,
   endDate: zDateString,
-  creatorId: z.string(), // ID as string
+  creatorId: zObjectId, // ID as string
   isActive: z.boolean(),
   createdAt: zDateString,
 });
@@ -27,7 +27,7 @@ export class CourseSummaryResponseDto extends createZodDto(
 // For Single View: Full version
 export const CourseDetailSchema = BaseCourse.extend({
   joinCode: z.string().length(8).optional(),
-  admins: z.array(z.string()),
+  admins: z.array(zObjectId).optional(), // Array of admin IDs as strings
 });
 export class CourseResponseDto extends createZodDto(CourseDetailSchema) {}
 

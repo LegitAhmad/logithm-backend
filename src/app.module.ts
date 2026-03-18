@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { CourseModule } from './course/course.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { QuestionModule } from './question/question.module';
+import { TestCaseModule } from './test-case/test-case.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { QuestionModule } from './question/question.module';
     CourseModule,
     AssignmentModule,
     QuestionModule,
+    TestCaseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
