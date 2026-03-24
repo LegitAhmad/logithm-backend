@@ -1,49 +1,75 @@
-import { Controller, Get, Patch, Param, UseGuards, Body } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Param,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/utils/decorators/create-param.decorator';
 import { ZodValidationPipe } from 'nestjs-zod';
-import {
-  UpdateAvatarSchema,
-  UpdateUserDto,
-  UpdateUserSchema,
-  UserDto,
-} from './DTOs/user.dto';
+import { UpdateUserDto, UpdateUserSchema } from './DTOs/user.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly users: UserService) {}
 
-  // Public profile
-  @Get(':id')
-  getByUsername(@Param('username') username: string) {
-    return this.users.findPublicProfile(username);
-  }
-
   // Current user
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@CurrentUser('id') userId: string) {
-    return this.users.findByIdentifier(userId);
+  me(@CurrentUser('_id') userId: string) {
+    return this.users.findByIdSafe(userId);
+  }
+
+  // Public profile
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.users.findPublicProfile(id);
   }
 
   // Update profile
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateMe(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('_id') userId: string,
     @Body(new ZodValidationPipe(UpdateUserSchema)) dto: UpdateUserDto,
   ) {
     return this.users.updateProfile(userId, dto);
   }
 
+  // Favorite a course
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/favorites')
+  favoriteCourse(
+    @CurrentUser('_id') userId: string,
+    @Body('courseId') courseId: string,
+  ) {
+    return this.users.favoriteCourse(userId, courseId);
+  }
+
   // Upload avatar
   @UseGuards(JwtAuthGuard)
   @Patch('me/avatar')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+    }),
+  )
   async updateAvatar(
-    @CurrentUser('id') user: UserDto,
-    @Body(new ZodValidationPipe(UpdateAvatarSchema)) avatarUrl: string,
+    @CurrentUser('_id') userId: string,
+    @UploadedFile() file: { buffer: Buffer; mimetype: string },
   ) {
-    return this.users.updateAvatar(user._id, avatarUrl);
+    console.log('[user.controller.updateAvatar] request', {
+      userId,
+      hasFile: Boolean(file),
+      mimetype: file?.mimetype,
+      size: file?.buffer?.length,
+    });
+    return this.users.uploadAvatar(userId, file);
   }
 }

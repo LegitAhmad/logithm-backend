@@ -6,14 +6,17 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import type { UserDto } from 'src/user/DTOs/user.dto';
 import { CurrentUser } from 'src/utils/decorators/create-param.decorator';
 
 import { AssignmentService } from './assignment.service';
 import {
+  AssignmentQueryDto,
   CreateAssignmentDto,
   PublishAssignmentDto,
   UpdateAssignmentDto,
@@ -29,15 +32,21 @@ export class AssignmentController {
   // Teacher: all own assignments
   @Get()
   @UseGuards(JwtAuthGuard)
-  getMyAssignments(@CurrentUser() user: UserDto) {
-    return this.assignmentService.getByOwner(user._id);
+  getMyAssignments(
+    @CurrentUser() user: UserDto,
+    @Query(new ZodValidationPipe(AssignmentQueryDto)) query: AssignmentQueryDto,
+  ) {
+    return this.assignmentService.getByOwner(user._id, query);
   }
 
   // Student: course assignments
   @Get('course/:id')
   @UseGuards(JwtAuthGuard)
-  getCourseAssignments(@Param('id') courseId: string) {
-    return this.assignmentService.getByCourse(courseId);
+  getCourseAssignments(
+    @Param('id') courseId: string,
+    @Query(new ZodValidationPipe(AssignmentQueryDto)) query: AssignmentQueryDto,
+  ) {
+    return this.assignmentService.getByCourse(courseId, query);
   }
 
   // Single assignment

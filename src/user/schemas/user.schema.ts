@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -35,6 +35,16 @@ export class User {
 
   @Prop({ trim: true, required: false })
   passwordHash: string;
+
+  @Prop({ trim: true, required: false })
+  avatarUrl?: string;
+
+  @Prop({
+    type: [Types.ObjectId],
+    ref: 'Course',
+    default: [],
+  })
+  favorites: Types.ObjectId[];
 
   @Prop({ required: true, default: false })
   isVerified: boolean;

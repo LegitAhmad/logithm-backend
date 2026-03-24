@@ -50,13 +50,15 @@ export class PublishAssignmentDto extends createZodDto(
 ) {}
 
 export const AssignmentQuerySchema = z.object({
-  status: z.enum(['draft', 'published', 'active', 'closed']).optional(),
+  status: z
+    .enum(['draft', 'published', 'pending', 'active', 'closed', 'missed'])
+    .optional(),
 
   courseId: zObjectId.optional(),
 
-  page: z.string().regex(/^\d+$/).default('1'),
+  page: z.coerce.number().int().min(1).default(1),
 
-  limit: z.string().regex(/^\d+$/).default('20'),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export class AssignmentQueryDto extends createZodDto(AssignmentQuerySchema) {}
@@ -77,7 +79,7 @@ export const AssignmentResponseSchema = z.object({
   startAt: z.string().nullable(),
   deadline: z.string().nullable(),
 
-  realStatus: z.enum(['draft', 'published', 'active', 'closed']),
+  realStatus: z.enum(['draft', 'pending', 'active', 'missed']),
 
   isActive: z.boolean(),
   isExpired: z.boolean(),

@@ -10,12 +10,50 @@ import { Model, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateCourseDto, UpdateCourseDto } from './DTOs/course.dto';
 import { randomBytes } from 'crypto';
+import { User, UserDocument } from 'src/user/schemas/user.schema';
+
+export interface FavoriteCourseResponse {
+  favorited: boolean;
+  favorites: Types.ObjectId[];
+}
 
 @Injectable()
 export class CourseService {
   constructor(
-    @InjectModel(Course.name) private readonly courseModel: Model<Course>,
+    @InjectModel(Course.name)
+    private readonly courseModel: Model<CourseDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {}
+
+  private async ensureUserCanFavoriteCourse(courseId: string, userId: string) {
+    if (!Types.ObjectId.isValid(courseId)) {
+      throw new BadRequestException('Invalid course id');
+    }
+
+    const course = await this.courseModel
+      .findById(courseId)
+      .select('creatorId admins students')
+      .lean();
+
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    const isCreator = course.creatorId.toString() === userId;
+    const isAdmin = course.admins.some(
+      (adminId) => adminId.toString() === userId,
+    );
+    const isStudent = course.students.some(
+      (studentId) => studentId.toString() === userId,
+    );
+
+    if (!isCreator && !isAdmin && !isStudent) {
+      throw new ForbiddenException(
+        'Only enrolled students and teachers can favorite this course',
+      );
+    }
+  }
 
   private async generateUniqueJoinCode(): Promise<string> {
     let code = '';
@@ -63,12 +101,11 @@ export class CourseService {
 
   async getCoursesByUser(userId: string, limit: number, offset: number) {
     const v = await this.courseModel
-      .find({ creatorId: userId })
+      .find({ creatorId: new Types.ObjectId(userId) })
       .select('-assignments')
       .skip(offset)
       .limit(limit)
       .exec();
-    console.log(v);
     return v;
   }
 
@@ -157,5 +194,55 @@ export class CourseService {
     );
 
     return { success: true };
+  }
+
+  async favoriteCourse(
+    courseId: string,
+    userId: string,
+  ): Promise<FavoriteCourseResponse> {
+    await this.ensureUserCanFavoriteCourse(courseId, userId);
+
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $addToSet: { favorites: new Types.ObjectId(courseId) } },
+        { new: true },
+      )
+      .select('favorites')
+      .exec();
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      favorited: true,
+      favorites: updatedUser.favorites as [],
+    };
+  }
+
+  async unfavoriteCourse(
+    courseId: string,
+    userId: string,
+  ): Promise<FavoriteCourseResponse> {
+    await this.ensureUserCanFavoriteCourse(courseId, userId);
+
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { $pull: { favorites: new Types.ObjectId(courseId) } },
+        { new: true },
+      )
+      .select('favorites')
+      .exec();
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      favorited: false,
+      favorites: updatedUser.favorites as [],
+    };
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   Body,
@@ -15,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/utils/decorators/create-param.decorator';
-import * as nestjsZod from 'nestjs-zod';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { CourseService } from './course.service';
 import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import {
@@ -25,7 +26,7 @@ import {
   PaginatedCourseResponseDto,
   UpdateCourseDto,
 } from './DTOs/course.dto';
-import { type UserDto } from 'src/user/DTOs/user.dto';
+import type { UserDto } from 'src/user/DTOs/user.dto';
 
 @ApiBearerAuth('jwt-auth')
 @Controller('courses')
@@ -51,15 +52,15 @@ export class CourseController {
   @Get()
   @UseGuards(JwtAuthGuard)
   async getUserCourses(
-    @CurrentUser() user: { sub: string },
-    @Query(new nestjsZod.ZodValidationPipe(CoursePaginationDto))
+    @CurrentUser() user: UserDto,
+    @Query(new ZodValidationPipe(CoursePaginationDto))
     query: CoursePaginationDto,
   ): Promise<PaginatedCourseResponseDto> {
     const limit = query.limit ?? 10;
     const offset = query.offset ?? 0;
 
     const courses = await this.courseService.getCoursesByUser(
-      user.sub,
+      user._id,
       limit,
       offset,
     );
@@ -67,7 +68,6 @@ export class CourseController {
     const cleanCourses = courses.map((course) =>
       CourseResponseDto.create(course.toObject()),
     );
-    console.log(cleanCourses);
 
     return {
       limit,
@@ -127,6 +127,21 @@ export class CourseController {
   @HttpCode(204)
   async leave(@Param('id') id: string, @CurrentUser() user: UserDto) {
     await this.courseService.unenrollStudent(id, user._id);
+  }
+
+  @Post(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  async favoriteCourse(@Param('id') id: string, @CurrentUser() user: UserDto) {
+    return await this.courseService.favoriteCourse(id, user._id);
+  }
+
+  @Delete(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  async unfavoriteCourse(
+    @Param('id') id: string,
+    @CurrentUser() user: UserDto,
+  ) {
+    return await this.courseService.unfavoriteCourse(id, user._id);
   }
 
   // --- Administration Endpoints ---

@@ -13,11 +13,14 @@ import {
   AssignmentStatus,
 } from './schemas/assignment.schema';
 import {
+  AssignmentQueryDto,
   AssignmentResponseDto,
   CreateAssignmentDto,
   PublishAssignmentDto,
   UpdateAssignmentDto,
 } from './DTOs/assignment.dto';
+
+type AssignmentRealStatus = 'draft' | 'pending' | 'active' | 'missed';
 
 @Injectable()
 export class AssignmentService {
@@ -34,19 +37,17 @@ export class AssignmentService {
     }
   }
 
-  private computeStatus(assignment: AssignmentDocument) {
+  private computeStatus(assignment: AssignmentDocument): AssignmentRealStatus {
     const now = new Date();
 
     if (assignment.status === AssignmentStatus.DRAFT)
       return AssignmentStatus.DRAFT;
 
-    if (assignment.startAt && now < assignment.startAt)
-      return AssignmentStatus.PUBLISHED;
+    if (assignment.deadline && now > assignment.deadline) return 'missed';
 
-    if (assignment.deadline && now > assignment.deadline)
-      return AssignmentStatus.CLOSED;
+    if (assignment.startAt && now < assignment.startAt) return 'pending';
 
-    return AssignmentStatus.ACTIVE;
+    return 'active';
   }
 
   private format(assignment: AssignmentDocument): AssignmentResponseDto {
@@ -63,31 +64,84 @@ export class AssignmentService {
       startAt: assignment.startAt?.toISOString() ?? null,
       deadline: assignment.deadline?.toISOString() ?? null,
       realStatus,
-      isActive: realStatus === AssignmentStatus.ACTIVE,
-      isExpired: realStatus === AssignmentStatus.CLOSED,
+      isActive: realStatus === 'active',
+      isExpired: realStatus === 'missed',
       createdAt: assignment.createdAt.toISOString(),
       updatedAt: assignment.updatedAt.toISOString(),
     };
   }
 
+  private matchesQueryStatus(
+    assignment: AssignmentDocument,
+    status?: AssignmentQueryDto['status'],
+  ) {
+    if (!status) return true;
+
+    const realStatus = this.computeStatus(assignment);
+
+    switch (status) {
+      case 'published':
+        return realStatus === 'pending';
+      case 'closed':
+        return realStatus === 'missed';
+      default:
+        return realStatus === status;
+    }
+  }
+
+  private paginateAssignments(
+    assignments: AssignmentDocument[],
+    query?: AssignmentQueryDto,
+  ) {
+    const page = query?.page ?? 1;
+    const limit = query?.limit ?? 20;
+
+    const refinedAssignments = assignments
+      .filter((assignment) =>
+        this.matchesQueryStatus(assignment, query?.status),
+      )
+      .sort(
+        (left, right) =>
+          right.createdAt.getTime() - left.createdAt.getTime(),
+      );
+
+    const offset = (page - 1) * limit;
+
+    return refinedAssignments.slice(offset, offset + limit);
+  }
+
   /* ---------------------------------- Queries ---------------------------------- */
 
-  async getByOwner(userId: string): Promise<AssignmentResponseDto[]> {
-    const list = await this.assignmentModel.find({
+  async getByOwner(
+    userId: string,
+    query?: AssignmentQueryDto,
+  ): Promise<AssignmentResponseDto[]> {
+    const criteria: Record<string, unknown> = {
       ownerId: userId,
-    });
+    };
 
-    const refinedList = list.map((a) => this.format(a as AssignmentDocument));
+    if (query?.courseId) {
+      criteria.courseId = query.courseId;
+    }
+
+    const list = await this.assignmentModel.find(criteria);
+
+    const refinedList = this.paginateAssignments(
+      list as AssignmentDocument[],
+      query,
+    ).map((a) => this.format(a as AssignmentDocument));
     return refinedList;
   }
 
-  async getByCourse(courseId: string) {
+  async getByCourse(courseId: string, query?: AssignmentQueryDto) {
     const list = await this.assignmentModel.find({
       courseId,
       status: { $ne: AssignmentStatus.DRAFT },
     });
 
-    return list.map((a) => this.format(a as AssignmentDocument));
+    return this.paginateAssignments(list as AssignmentDocument[], query).map(
+      (a) => this.format(a as AssignmentDocument),
+    );
   }
 
   async getOne(id: string, userId: string) {

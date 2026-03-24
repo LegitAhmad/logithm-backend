@@ -16,7 +16,9 @@ export const UserValidator = z.object({
   email: email,
   firstName: firstName,
   lastName: lastName,
+  avatarUrl: z.url().optional(),
   passwordHash: passwordHash,
+  favorites: z.array(zObjectId).default([]),
   isVerified: isVerified,
 });
 
@@ -30,3 +32,9 @@ export const UpdateAvatarSchema = z.object({
 });
 
 export class UpdateAvatarDto extends createZodDto(UpdateAvatarSchema) {}
+
+export const FavoriteCourseSchema = z.object({
+  courseId: zObjectId,
+});
+
+export class FavoriteCourseDto extends createZodDto(FavoriteCourseSchema) {}

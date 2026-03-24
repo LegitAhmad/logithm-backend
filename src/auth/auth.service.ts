@@ -60,7 +60,6 @@ export class AuthService {
   }
 
   async signup({ email, password }: SignupInputDto) {
-    console.log(email);
     const user = await this.userService.findByIdentifier(email);
 
     if (user) throw new ConflictException('User Already Exists');

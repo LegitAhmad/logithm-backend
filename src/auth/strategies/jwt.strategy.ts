@@ -24,8 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userService.findByIdentifier(payload.sub);
     if (!user) throw new UnauthorizedException();
     const cleanUser = user.toObject();
+    const favorites = (cleanUser.favorites ?? []).map((favorite) =>
+      favorite.toString(),
+    );
 
-    console.log(payload.sub);
-    return { ...cleanUser, _id: payload.sub };
+    return { ...cleanUser, _id: payload.sub, favorites };
   }
 }
