@@ -88,20 +88,28 @@ export class CourseService {
     creatorId: string,
   ): Promise<CourseDocument> {
     const joinCode = await this.generateUniqueJoinCode();
+    const creatorObjectId = new Types.ObjectId(creatorId);
 
     const newCourse = new this.courseModel({
       ...dto,
-      creatorId: creatorId,
+      creatorId: creatorObjectId,
       joinCode,
-      admins: [creatorId],
+      admins: [creatorObjectId],
     });
 
     return newCourse.save();
   }
 
   async getCoursesByUser(userId: string, limit: number, offset: number) {
+    const userObjectId = new Types.ObjectId(userId);
     const v = await this.courseModel
-      .find({ creatorId: new Types.ObjectId(userId) })
+      .find({
+        $or: [
+          { creatorId: userObjectId },
+          { admins: userObjectId },
+          { students: userObjectId },
+        ],
+      })
       .select('-assignments')
       .skip(offset)
       .limit(limit)
@@ -109,20 +117,57 @@ export class CourseService {
     return v;
   }
 
-  async getCourseById(id: string) {
-    return this.courseModel.findById(id).exec();
+  async getCourseById(id: string, requesterId: string) {
+    const course = await this.courseModel.findById(id).exec();
+    if (!course) throw new NotFoundException('Course not found');
+
+    const isCreator = course.creatorId.toString() === requesterId;
+    const isAdmin = course.admins.some(
+      (adminId) => adminId.toString() === requesterId,
+    );
+    const isStudent = course.students.some(
+      (studentId) => studentId.toString() === requesterId,
+    );
+
+    if (!isCreator && !isAdmin && !isStudent) {
+      throw new ForbiddenException(
+        'Only enrolled students and teachers can view this course',
+      );
+    }
+
+    return course;
   }
   async update(
     id: string,
     updateData: UpdateCourseDto,
+    requesterId: string,
   ): Promise<CourseDocument | null> {
+    const course = await this.courseModel.findById(id);
+    if (!course) return null;
+
+    if (
+      course.creatorId.toString() !== requesterId &&
+      !course.admins.some((adminId) => adminId.toString() === requesterId)
+    ) {
+      throw new ForbiddenException(
+        'Only the course creator or admins can update course details',
+      );
+    }
+
     // { new: true } returns the updated document instead of the old one
     return this.courseModel
       .findByIdAndUpdate(id, updateData, { new: true })
       .exec();
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, requesterId: string): Promise<boolean> {
+    const course = await this.courseModel.findById(id);
+    if (!course) return false;
+
+    if (course.creatorId.toString() !== requesterId) {
+      throw new ForbiddenException('Only the course creator can delete it');
+    }
+
     const result = await this.courseModel.findByIdAndDelete(id).exec();
 
     // Returns true if something was deleted, false if the ID didn't exist
@@ -130,9 +175,10 @@ export class CourseService {
   }
 
   async enrollByCode(joinCode: string, userId: string) {
+    const userObjectId = new Types.ObjectId(userId);
     const course = await this.courseModel.findOneAndUpdate(
       { joinCode: joinCode.toUpperCase() },
-      { $addToSet: { students: userId } },
+      { $addToSet: { students: userObjectId } },
       { new: true },
     );
 
@@ -144,9 +190,10 @@ export class CourseService {
   }
 
   async unenrollStudent(courseId: string, userId: string) {
+    const userObjectId = new Types.ObjectId(userId);
     const course = await this.courseModel.findByIdAndUpdate(
       courseId,
-      { $pull: { students: userId } },
+      { $pull: { students: userObjectId } },
       { new: true },
     );
 
