@@ -66,7 +66,6 @@ export class UserService {
       .findOne(query)
       .select('username firstName lastName bio avatarUrl createdAt')
       .lean();
-    console.log(user);
 
     if (!user) {
       throw new NotFoundException('User not found');

@@ -55,6 +55,22 @@ export class QuestionController {
   }
 
   /**
+   * Retrieves all questions for a specific assignment.
+   */
+  @Get('assignment/:assignmentId')
+  @ApiOperation({ summary: 'Get questions for an assignment' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of questions for the assignment',
+  })
+  async getByAssignment(
+    @Param('assignmentId') assignmentId: string,
+    @CurrentUser() user?: UserDto,
+  ) {
+    return this.questionService.findByAssignment(assignmentId, user?._id);
+  }
+
+  /**
    * Retrieves a single question by its ID.
    * Public questions are accessible to everyone; private ones only to the owner.
    */
