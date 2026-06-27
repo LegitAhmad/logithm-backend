@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
@@ -10,6 +10,7 @@ import { CourseModule } from './course/course.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { QuestionModule } from './question/question.module';
 import { TestCaseModule } from './test-case/test-case.module';
+import { SubmissionModule } from './submission/submission.module';
 
 @Module({
   imports: [
@@ -18,13 +19,18 @@ import { TestCaseModule } from './test-case/test-case.module';
       load: [config],
       expandVariables: true,
     }),
-    MongooseModule.forRoot(config().mongodbUri),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) =>
+        ({ uri: configService.get<string>('mongodbUri') }),
+    }),
     UserModule,
     AuthModule,
     CourseModule,
     AssignmentModule,
     QuestionModule,
     TestCaseModule,
+    SubmissionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

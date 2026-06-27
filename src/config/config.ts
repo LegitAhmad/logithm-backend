@@ -13,6 +13,7 @@ export default () => {
   const supabasePrivateKey =
     process.env.SUPABASE_PRIVATE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const supabaseBucket = process.env.SUPABASE_BUCKET;
+  const pistonUrl = process.env.PISTON_URL || 'http://localhost:2000';
 
   if (!nodeEnv || !mongodbUri) {
     throw new Error(
@@ -32,5 +33,6 @@ export default () => {
     supabasePublicKey: supabasePublicKey,
     supabasePrivateKey: supabasePrivateKey,
     supabaseBucket: supabaseBucket,
+    pistonUrl: pistonUrl,
   };
 };
