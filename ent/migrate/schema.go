@@ -8,76 +8,171 @@ import (
 )
 
 var (
-	// AssignmentsColumns holds the columns for the "assignments" table.
-	AssignmentsColumns = []*schema.Column{
+	// CoursesColumns holds the columns for the "courses" table.
+	CoursesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Default: ""},
+		{Name: "join_code", Type: field.TypeString, Unique: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "owner_id", Type: field.TypeInt},
 	}
-	// AssignmentsTable holds the schema information for the "assignments" table.
-	AssignmentsTable = &schema.Table{
-		Name:       "assignments",
-		Columns:    AssignmentsColumns,
-		PrimaryKey: []*schema.Column{AssignmentsColumns[0]},
+	// CoursesTable holds the schema information for the "courses" table.
+	CoursesTable = &schema.Table{
+		Name:       "courses",
+		Columns:    CoursesColumns,
+		PrimaryKey: []*schema.Column{CoursesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "courses_users_owned_courses",
+				Columns:    []*schema.Column{CoursesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "course_join_code",
+				Unique:  false,
+				Columns: []*schema.Column{CoursesColumns[3]},
+			},
+		},
 	}
-	// QuestionsColumns holds the columns for the "questions" table.
-	QuestionsColumns = []*schema.Column{
+	// CourseMembershipsColumns holds the columns for the "course_memberships" table.
+	CourseMembershipsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "teacher", "student"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "course_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
 	}
-	// QuestionsTable holds the schema information for the "questions" table.
-	QuestionsTable = &schema.Table{
-		Name:       "questions",
-		Columns:    QuestionsColumns,
-		PrimaryKey: []*schema.Column{QuestionsColumns[0]},
+	// CourseMembershipsTable holds the schema information for the "course_memberships" table.
+	CourseMembershipsTable = &schema.Table{
+		Name:       "course_memberships",
+		Columns:    CourseMembershipsColumns,
+		PrimaryKey: []*schema.Column{CourseMembershipsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "course_memberships_courses_memberships",
+				Columns:    []*schema.Column{CourseMembershipsColumns[3]},
+				RefColumns: []*schema.Column{CoursesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "course_memberships_users_memberships",
+				Columns:    []*schema.Column{CourseMembershipsColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "coursemembership_user_id_course_id",
+				Unique:  true,
+				Columns: []*schema.Column{CourseMembershipsColumns[4], CourseMembershipsColumns[3]},
+			},
+		},
 	}
-	// ResultsColumns holds the columns for the "results" table.
-	ResultsColumns = []*schema.Column{
+	// RefreshSessionsColumns holds the columns for the "refresh_sessions" table.
+	RefreshSessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "session_id", Type: field.TypeString, Unique: true},
+		{Name: "family_id", Type: field.TypeString},
+		{Name: "token_hash", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeInt},
 	}
-	// ResultsTable holds the schema information for the "results" table.
-	ResultsTable = &schema.Table{
-		Name:       "results",
-		Columns:    ResultsColumns,
-		PrimaryKey: []*schema.Column{ResultsColumns[0]},
+	// RefreshSessionsTable holds the schema information for the "refresh_sessions" table.
+	RefreshSessionsTable = &schema.Table{
+		Name:       "refresh_sessions",
+		Columns:    RefreshSessionsColumns,
+		PrimaryKey: []*schema.Column{RefreshSessionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "refresh_sessions_users_refresh_sessions",
+				Columns:    []*schema.Column{RefreshSessionsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "refreshsession_session_id",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshSessionsColumns[1]},
+			},
+			{
+				Name:    "refreshsession_family_id",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshSessionsColumns[2]},
+			},
+		},
 	}
-	// StudentsColumns holds the columns for the "students" table.
-	StudentsColumns = []*schema.Column{
+	// TeacherInvitationsColumns holds the columns for the "teacher_invitations" table.
+	TeacherInvitationsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "email", Type: field.TypeString},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "status", Type: field.TypeString, Default: "pending"},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "accepted_at", Type: field.TypeTime, Nullable: true},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "course_id", Type: field.TypeInt},
 	}
-	// StudentsTable holds the schema information for the "students" table.
-	StudentsTable = &schema.Table{
-		Name:       "students",
-		Columns:    StudentsColumns,
-		PrimaryKey: []*schema.Column{StudentsColumns[0]},
+	// TeacherInvitationsTable holds the schema information for the "teacher_invitations" table.
+	TeacherInvitationsTable = &schema.Table{
+		Name:       "teacher_invitations",
+		Columns:    TeacherInvitationsColumns,
+		PrimaryKey: []*schema.Column{TeacherInvitationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "teacher_invitations_courses_teacher_invitations",
+				Columns:    []*schema.Column{TeacherInvitationsColumns[8]},
+				RefColumns: []*schema.Column{CoursesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
-	// SubmissionsColumns holds the columns for the "submissions" table.
-	SubmissionsColumns = []*schema.Column{
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "display_name", Type: field.TypeString},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 	}
-	// SubmissionsTable holds the schema information for the "submissions" table.
-	SubmissionsTable = &schema.Table{
-		Name:       "submissions",
-		Columns:    SubmissionsColumns,
-		PrimaryKey: []*schema.Column{SubmissionsColumns[0]},
-	}
-	// TeachersColumns holds the columns for the "teachers" table.
-	TeachersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-	}
-	// TeachersTable holds the schema information for the "teachers" table.
-	TeachersTable = &schema.Table{
-		Name:       "teachers",
-		Columns:    TeachersColumns,
-		PrimaryKey: []*schema.Column{TeachersColumns[0]},
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_email",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[1]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		AssignmentsTable,
-		QuestionsTable,
-		ResultsTable,
-		StudentsTable,
-		SubmissionsTable,
-		TeachersTable,
+		CoursesTable,
+		CourseMembershipsTable,
+		RefreshSessionsTable,
+		TeacherInvitationsTable,
+		UsersTable,
 	}
 )
 
 func init() {
+	CoursesTable.ForeignKeys[0].RefTable = UsersTable
+	CourseMembershipsTable.ForeignKeys[0].RefTable = CoursesTable
+	CourseMembershipsTable.ForeignKeys[1].RefTable = UsersTable
+	RefreshSessionsTable.ForeignKeys[0].RefTable = UsersTable
+	TeacherInvitationsTable.ForeignKeys[0].RefTable = CoursesTable
 }

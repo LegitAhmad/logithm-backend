@@ -12,12 +12,11 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/legitahmad/logithm-backend/ent/assignment"
-	"github.com/legitahmad/logithm-backend/ent/question"
-	"github.com/legitahmad/logithm-backend/ent/result"
-	"github.com/legitahmad/logithm-backend/ent/student"
-	"github.com/legitahmad/logithm-backend/ent/submission"
-	"github.com/legitahmad/logithm-backend/ent/teacher"
+	"github.com/legitahmad/logithm-backend/ent/course"
+	"github.com/legitahmad/logithm-backend/ent/coursemembership"
+	"github.com/legitahmad/logithm-backend/ent/refreshsession"
+	"github.com/legitahmad/logithm-backend/ent/teacherinvitation"
+	"github.com/legitahmad/logithm-backend/ent/user"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -78,12 +77,11 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			assignment.Table: assignment.ValidColumn,
-			question.Table:   question.ValidColumn,
-			result.Table:     result.ValidColumn,
-			student.Table:    student.ValidColumn,
-			submission.Table: submission.ValidColumn,
-			teacher.Table:    teacher.ValidColumn,
+			course.Table:            course.ValidColumn,
+			coursemembership.Table:  coursemembership.ValidColumn,
+			refreshsession.Table:    refreshsession.ValidColumn,
+			teacherinvitation.Table: teacherinvitation.ValidColumn,
+			user.Table:              user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

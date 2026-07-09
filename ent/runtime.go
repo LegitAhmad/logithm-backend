@@ -2,8 +2,49 @@
 
 package ent
 
+import (
+	"github.com/legitahmad/logithm-backend/ent/course"
+	"github.com/legitahmad/logithm-backend/ent/schema"
+	"github.com/legitahmad/logithm-backend/ent/teacherinvitation"
+	"github.com/legitahmad/logithm-backend/ent/user"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	courseFields := schema.Course{}.Fields()
+	_ = courseFields
+	// courseDescName is the schema descriptor for name field.
+	courseDescName := courseFields[0].Descriptor()
+	// course.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	course.NameValidator = courseDescName.Validators[0].(func(string) error)
+	// courseDescDescription is the schema descriptor for description field.
+	courseDescDescription := courseFields[1].Descriptor()
+	// course.DefaultDescription holds the default value on creation for the description field.
+	course.DefaultDescription = courseDescDescription.Default.(string)
+	// courseDescJoinCode is the schema descriptor for join_code field.
+	courseDescJoinCode := courseFields[2].Descriptor()
+	// course.JoinCodeValidator is a validator for the "join_code" field. It is called by the builders before save.
+	course.JoinCodeValidator = courseDescJoinCode.Validators[0].(func(string) error)
+	teacherinvitationFields := schema.TeacherInvitation{}.Fields()
+	_ = teacherinvitationFields
+	// teacherinvitationDescEmail is the schema descriptor for email field.
+	teacherinvitationDescEmail := teacherinvitationFields[0].Descriptor()
+	// teacherinvitation.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	teacherinvitation.EmailValidator = teacherinvitationDescEmail.Validators[0].(func(string) error)
+	// teacherinvitationDescStatus is the schema descriptor for status field.
+	teacherinvitationDescStatus := teacherinvitationFields[2].Descriptor()
+	// teacherinvitation.DefaultStatus holds the default value on creation for the status field.
+	teacherinvitation.DefaultStatus = teacherinvitationDescStatus.Default.(string)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[0].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
+	// userDescDisplayName is the schema descriptor for display_name field.
+	userDescDisplayName := userFields[1].Descriptor()
+	// user.DisplayNameValidator is a validator for the "display_name" field. It is called by the builders before save.
+	user.DisplayNameValidator = userDescDisplayName.Validators[0].(func(string) error)
 }

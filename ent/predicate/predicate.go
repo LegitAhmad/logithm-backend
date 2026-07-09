@@ -6,20 +6,17 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// Assignment is the predicate function for assignment builders.
-type Assignment func(*sql.Selector)
+// Course is the predicate function for course builders.
+type Course func(*sql.Selector)
 
-// Question is the predicate function for question builders.
-type Question func(*sql.Selector)
+// CourseMembership is the predicate function for coursemembership builders.
+type CourseMembership func(*sql.Selector)
 
-// Result is the predicate function for result builders.
-type Result func(*sql.Selector)
+// RefreshSession is the predicate function for refreshsession builders.
+type RefreshSession func(*sql.Selector)
 
-// Student is the predicate function for student builders.
-type Student func(*sql.Selector)
+// TeacherInvitation is the predicate function for teacherinvitation builders.
+type TeacherInvitation func(*sql.Selector)
 
-// Submission is the predicate function for submission builders.
-type Submission func(*sql.Selector)
-
-// Teacher is the predicate function for teacher builders.
-type Teacher func(*sql.Selector)
+// User is the predicate function for user builders.
+type User func(*sql.Selector)

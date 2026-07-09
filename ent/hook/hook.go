@@ -9,76 +9,64 @@ import (
 	"github.com/legitahmad/logithm-backend/ent"
 )
 
-// The AssignmentFunc type is an adapter to allow the use of ordinary
-// function as Assignment mutator.
-type AssignmentFunc func(context.Context, *ent.AssignmentMutation) (ent.Value, error)
+// The CourseFunc type is an adapter to allow the use of ordinary
+// function as Course mutator.
+type CourseFunc func(context.Context, *ent.CourseMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f AssignmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.AssignmentMutation); ok {
+func (f CourseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CourseMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AssignmentMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CourseMutation", m)
 }
 
-// The QuestionFunc type is an adapter to allow the use of ordinary
-// function as Question mutator.
-type QuestionFunc func(context.Context, *ent.QuestionMutation) (ent.Value, error)
+// The CourseMembershipFunc type is an adapter to allow the use of ordinary
+// function as CourseMembership mutator.
+type CourseMembershipFunc func(context.Context, *ent.CourseMembershipMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f QuestionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.QuestionMutation); ok {
+func (f CourseMembershipFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CourseMembershipMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.QuestionMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CourseMembershipMutation", m)
 }
 
-// The ResultFunc type is an adapter to allow the use of ordinary
-// function as Result mutator.
-type ResultFunc func(context.Context, *ent.ResultMutation) (ent.Value, error)
+// The RefreshSessionFunc type is an adapter to allow the use of ordinary
+// function as RefreshSession mutator.
+type RefreshSessionFunc func(context.Context, *ent.RefreshSessionMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f ResultFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.ResultMutation); ok {
+func (f RefreshSessionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RefreshSessionMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ResultMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RefreshSessionMutation", m)
 }
 
-// The StudentFunc type is an adapter to allow the use of ordinary
-// function as Student mutator.
-type StudentFunc func(context.Context, *ent.StudentMutation) (ent.Value, error)
+// The TeacherInvitationFunc type is an adapter to allow the use of ordinary
+// function as TeacherInvitation mutator.
+type TeacherInvitationFunc func(context.Context, *ent.TeacherInvitationMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f StudentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.StudentMutation); ok {
+func (f TeacherInvitationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.TeacherInvitationMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudentMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TeacherInvitationMutation", m)
 }
 
-// The SubmissionFunc type is an adapter to allow the use of ordinary
-// function as Submission mutator.
-type SubmissionFunc func(context.Context, *ent.SubmissionMutation) (ent.Value, error)
+// The UserFunc type is an adapter to allow the use of ordinary
+// function as User mutator.
+type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f SubmissionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.SubmissionMutation); ok {
+func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SubmissionMutation", m)
-}
-
-// The TeacherFunc type is an adapter to allow the use of ordinary
-// function as Teacher mutator.
-type TeacherFunc func(context.Context, *ent.TeacherMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f TeacherFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.TeacherMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TeacherMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
 }
 
 // Condition is a hook condition function.

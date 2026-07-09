@@ -12,18 +12,16 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// Assignment is the client for interacting with the Assignment builders.
-	Assignment *AssignmentClient
-	// Question is the client for interacting with the Question builders.
-	Question *QuestionClient
-	// Result is the client for interacting with the Result builders.
-	Result *ResultClient
-	// Student is the client for interacting with the Student builders.
-	Student *StudentClient
-	// Submission is the client for interacting with the Submission builders.
-	Submission *SubmissionClient
-	// Teacher is the client for interacting with the Teacher builders.
-	Teacher *TeacherClient
+	// Course is the client for interacting with the Course builders.
+	Course *CourseClient
+	// CourseMembership is the client for interacting with the CourseMembership builders.
+	CourseMembership *CourseMembershipClient
+	// RefreshSession is the client for interacting with the RefreshSession builders.
+	RefreshSession *RefreshSessionClient
+	// TeacherInvitation is the client for interacting with the TeacherInvitation builders.
+	TeacherInvitation *TeacherInvitationClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
 
 	// lazily loaded.
 	client     *Client
@@ -155,12 +153,11 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.Assignment = NewAssignmentClient(tx.config)
-	tx.Question = NewQuestionClient(tx.config)
-	tx.Result = NewResultClient(tx.config)
-	tx.Student = NewStudentClient(tx.config)
-	tx.Submission = NewSubmissionClient(tx.config)
-	tx.Teacher = NewTeacherClient(tx.config)
+	tx.Course = NewCourseClient(tx.config)
+	tx.CourseMembership = NewCourseMembershipClient(tx.config)
+	tx.RefreshSession = NewRefreshSessionClient(tx.config)
+	tx.TeacherInvitation = NewTeacherInvitationClient(tx.config)
+	tx.User = NewUserClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -170,7 +167,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Assignment.QueryXXX(), the query will be executed
+// applies a query, for example: Course.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

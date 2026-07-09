@@ -4,20 +4,21 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"net/http"
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/legitahmad/logithm-backend/ent"
 	"github.com/legitahmad/logithm-backend/internal/config"
+	"github.com/legitahmad/logithm-backend/internal/server"
 )
 
 func main() {
 	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
 
 	db, err := sql.Open("pgx", cfg.DSN())
 	if err != nil {
@@ -34,17 +35,10 @@ func main() {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
-	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	r.Get("/", func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("ok"))
-	})
+	app := server.NewApp(server.NewContainer(cfg, client))
 
 	log.Printf("listening on :%s", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
+	if err := app.Run(":" + cfg.Port); err != nil {
 		log.Fatal(err)
 	}
 }
