@@ -21,8 +21,9 @@ import { SubmissionModule } from './submission/submission.module';
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) =>
-        ({ uri: configService.get<string>('mongodbUri') }),
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('mongodbUri'),
+      }),
     }),
     UserModule,
     AuthModule,

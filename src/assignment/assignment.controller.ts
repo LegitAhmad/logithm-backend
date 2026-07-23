@@ -150,7 +150,10 @@ export class AssignmentController {
     description: 'The assignment has been reverted to draft.',
     type: AssignmentResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Cannot unpublish active assignment' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot unpublish active assignment',
+  })
   unpublish(@Param('id') id: string, @CurrentUser() user: UserDto) {
     return this.assignmentService.unpublish(id, user._id);
   }

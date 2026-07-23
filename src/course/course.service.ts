@@ -264,7 +264,7 @@ export class CourseService {
 
     return {
       favorited: true,
-      favorites: updatedUser.favorites as [],
+      favorites: updatedUser.favorites,
     };
   }
 
@@ -289,7 +289,7 @@ export class CourseService {
 
     return {
       favorited: false,
-      favorites: updatedUser.favorites as [],
+      favorites: updatedUser.favorites,
     };
   }
 }

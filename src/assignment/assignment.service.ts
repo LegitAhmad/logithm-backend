@@ -101,8 +101,7 @@ export class AssignmentService {
         this.matchesQueryStatus(assignment, query?.status),
       )
       .sort(
-        (left, right) =>
-          right.createdAt.getTime() - left.createdAt.getTime(),
+        (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
       );
 
     const offset = (page - 1) * limit;
@@ -129,7 +128,7 @@ export class AssignmentService {
     const refinedList = this.paginateAssignments(
       list as AssignmentDocument[],
       query,
-    ).map((a) => this.format(a as AssignmentDocument));
+    ).map((a) => this.format(a));
     return refinedList;
   }
 
@@ -140,7 +139,7 @@ export class AssignmentService {
     });
 
     return this.paginateAssignments(list as AssignmentDocument[], query).map(
-      (a) => this.format(a as AssignmentDocument),
+      (a) => this.format(a),
     );
   }
 

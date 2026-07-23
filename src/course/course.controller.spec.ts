@@ -62,7 +62,7 @@ describe('CourseController', () => {
 
       service.create.mockResolvedValue(mockCourse);
 
-      const result = await controller.create(createCourseDto as any, user as any);
+      const result = await controller.create(createCourseDto, user as any);
 
       expect(service.create).toHaveBeenCalledWith(createCourseDto, user._id);
       expect(result).toBeDefined();
@@ -93,7 +93,7 @@ describe('CourseController', () => {
 
       service.getCoursesByUser.mockResolvedValue(mockCourses);
 
-      const result = await controller.getUserCourses(user as any, query as any);
+      const result = await controller.getUserCourses(user as any, query);
 
       expect(service.getCoursesByUser).toHaveBeenCalledWith(user._id, 10, 0);
       expect(result.data).toHaveLength(1);

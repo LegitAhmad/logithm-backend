@@ -85,4 +85,3 @@ export const QuestionOwnerResponseSchema = QuestionResponseSchema.extend({
 export class QuestionOwnerResponseDto extends createZodDto(
   QuestionOwnerResponseSchema,
 ) {}
-

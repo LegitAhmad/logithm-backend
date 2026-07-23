@@ -51,7 +51,7 @@ describe('CourseService', () => {
     it('should return courses where user is creator, admin or student', async () => {
       const userId = '507f1f77bcf86cd799439011';
       const mockCourses = [{ toObject: () => ({ name: 'Course 1' }) }];
-      
+
       courseModel.find.mockReturnValue({
         select: jest.fn().mockReturnValue({
           skip: jest.fn().mockReturnValue({

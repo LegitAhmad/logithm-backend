@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { LoginInputDto } from './DTOs/loginInput.dto';
 import { UserService } from '../user/user.service';
 import { hasher } from 'src/config/hasher';
@@ -18,7 +19,21 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async generateTokens(userId: string) {
+  private getCookieOptions() {
+    const isProduction =
+      this.configService.get<string>('NODE_ENV') === 'production';
+    return {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      maxAge:
+        this.configService.get<number>('jwtRefreshCookieMaxAge') ??
+        7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    };
+  }
+
+  async generateTokens(userId: string, res: Response) {
     const accessToken = await this.jwtService.signAsync({ sub: userId }, {
       secret: this.configService.get<string>('jwtAccessSecret'),
       expiresIn: this.configService.get<string>('jwtAccessExpiresIn'),
@@ -29,24 +44,36 @@ export class AuthService {
       expiresIn: this.configService.get<string>('jwtRefreshExpiresIn'),
     } as JwtSignOptions);
 
-    return { accessToken, refreshToken };
-  }
-
-  async refresh(userId: string) {
-    const accessToken = await this.jwtService.signAsync({ sub: userId }, {
-      secret: this.configService.get<string>('jwtAccessSecret'),
-      expiresIn: this.configService.get<string>('jwtAccessExpiresIn'),
-    } as JwtSignOptions);
+    res.cookie('refreshToken', refreshToken, this.getCookieOptions());
 
     return { accessToken };
   }
 
-  async login({ identifier, password }: LoginInputDto) {
+  async refresh(oldRefreshToken: string, res: Response) {
+    let payload: { sub: string };
+    try {
+      payload = await this.jwtService.verifyAsync(oldRefreshToken, {
+        secret: this.configService.get<string>('jwtRefreshSecret'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const userId = payload.sub;
+    const user = await this.userService.findByIdentifier(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return this.generateTokens(userId, res);
+  }
+
+  async login({ identifier, password }: LoginInputDto, res: Response) {
     const user = await this.userService.findByIdentifier(identifier);
 
     if (!user) throw new UnauthorizedException('Invalid Credentials');
 
-    // TODO: make custom error for this
     if (!user?.passwordHash)
       throw new UnauthorizedException(
         'User Has Not Configured Email Authentication',
@@ -55,7 +82,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid Password');
     else
       return {
-        ...(await this.generateTokens(user._id.toString())),
+        ...(await this.generateTokens(user._id.toString(), res)),
       };
   }
 
@@ -65,5 +92,9 @@ export class AuthService {
     if (user) throw new ConflictException('User Already Exists');
 
     return await this.userService.create({ email, password });
+  }
+
+  logout(res: Response) {
+    res.clearCookie('refreshToken', this.getCookieOptions());
   }
 }

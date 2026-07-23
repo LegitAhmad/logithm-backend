@@ -10,29 +10,28 @@ export default () => {
   const jwtRefreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN;
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabasePublicKey = process.env.SUPABASE_PUBLIC_KEY;
-  const supabasePrivateKey =
-    process.env.SUPABASE_PRIVATE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabasePrivateKey = process.env.SUPABASE_PRIVATE_KEY;
   const supabaseBucket = process.env.SUPABASE_BUCKET;
-  const pistonUrl = process.env.PISTON_URL || 'http://localhost:2000';
+  const pistonUrl = process.env.PISTON_URL;
+  const redisHost = process.env.REDIS_HOST;
+  const redisPort = process.env.REDIS_PORT;
+  const redisUnixSocket = process.env.REDIS_UNIX_SOCKET;
 
-  if (!nodeEnv || !mongodbUri) {
-    throw new Error(
-      'The environment variables are required, but not specified correctly.\n Place the .env file at the root of your project.',
-    );
-  }
   return {
-    mongodbUri: mongodbUri,
-    isDev: nodeEnv === 'development',
-    nodeEnv: nodeEnv,
-    port: port,
-    jwtRefreshSecret: jwtRefreshSecret,
-    jwtAccessSecret: jwtAccessSecret,
-    jwtAccessExpiresIn: jwtAccessExpiresIn,
-    jwtRefreshExpiresIn: jwtRefreshExpiresIn,
-    supabaseUrl: supabaseUrl,
-    supabasePublicKey: supabasePublicKey,
-    supabasePrivateKey: supabasePrivateKey,
-    supabaseBucket: supabaseBucket,
-    pistonUrl: pistonUrl,
+    nodeEnv,
+    port,
+    mongodbUri,
+    jwtAccessSecret,
+    jwtRefreshSecret,
+    jwtAccessExpiresIn,
+    jwtRefreshExpiresIn,
+    supabaseUrl,
+    supabasePublicKey,
+    supabasePrivateKey,
+    supabaseBucket,
+    pistonUrl,
+    redisHost,
+    redisPort,
+    redisUnixSocket,
   };
 };
