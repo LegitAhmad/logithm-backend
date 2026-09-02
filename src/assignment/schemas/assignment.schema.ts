@@ -1,7 +1,7 @@
 // assignments.schema.ts
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Types, HydratedDocument } from 'mongoose';
+import { Types, HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export interface AssignmentTimestamps {
   createdAt: Date;
@@ -27,10 +27,10 @@ export class Assignment {
   description?: string;
 
   // For now required, later optional
-  @Prop({ type: Types.ObjectId, ref: 'Course', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Course', required: true })
   courseId: Types.ObjectId;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Question', default: [] })
+  @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'Question', default: [] })
   questionIds: Types.ObjectId[];
 
   @Prop({
@@ -52,7 +52,7 @@ export class Assignment {
   deadline?: Date;
 
   // Who created it
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   ownerId: Types.ObjectId;
 }
 

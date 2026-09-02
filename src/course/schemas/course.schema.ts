@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type CourseDocument = HydratedDocument<Course>;
 
@@ -39,14 +39,14 @@ export class Course {
 
   // users
   @Prop({
-    type: Types.ObjectId,
+    type: MongooseSchema.Types.ObjectId,
     ref: 'User',
     required: true,
   })
   creatorId: Types.ObjectId;
 
   @Prop({
-    type: [Types.ObjectId],
+    type: [MongooseSchema.Types.ObjectId],
     ref: 'User',
     default: [],
     validate: {
@@ -57,14 +57,14 @@ export class Course {
   admins: Types.ObjectId[];
 
   @Prop({
-    type: [Types.ObjectId],
+    type: [MongooseSchema.Types.ObjectId],
     ref: 'User',
     default: [],
   })
   students: Types.ObjectId[];
 
   @Prop({
-    type: [Types.ObjectId],
+    type: [MongooseSchema.Types.ObjectId],
     ref: 'Assignment',
     default: [],
   })

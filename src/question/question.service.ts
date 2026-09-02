@@ -12,15 +12,15 @@ import {
   QuestionResponseDto,
   QuestionOwnerResponseDto,
 } from './DTOs/question.dto';
-import { AssignmentQuestion } from './schemas/assignment-question.schema';
+import { Assignment } from '../assignment/schemas/assignment.schema';
 
 @Injectable()
 export class QuestionService {
   constructor(
     @InjectModel(Question.name)
     private readonly questionModel: Model<Question>,
-    @InjectModel(AssignmentQuestion.name)
-    private readonly assignmentQuestionModel: Model<AssignmentQuestion>,
+    @InjectModel(Assignment.name)
+    private readonly assignmentModel: Model<Assignment>,
   ) {}
 
   private formatForOwner(q: QuestionDocument): QuestionOwnerResponseDto {
@@ -131,33 +131,26 @@ export class QuestionService {
   /* ---------- ASSIGNMENT-RELATED ---------- */
 
   /**
-   * Get all questions inside an assignment
-   * (with overrides: points, limits, order)
+   * Get all questions attached to an assignment, in the order they were
+   * added (Assignment.questionIds is the single source of truth for the
+   * assignment <-> question relationship).
    */
   async findByAssignment(assignmentId: string, userId?: string) {
-    const assignmentQuestions = await this.assignmentQuestionModel
-      .find({
-        assignmentId: new Types.ObjectId(assignmentId),
-      })
-      .populate('questionId')
-      .sort({ order: 1 });
+    const assignment = await this.assignmentModel.findById(assignmentId);
+    if (!assignment) throw new NotFoundException('Assignment not found');
 
-    return assignmentQuestions.map((aq) => {
-      const q = aq.questionId as unknown as QuestionDocument;
-
-      const isOwner = userId && q.ownerId.toString() === userId;
-
-      const formattedQuestion = isOwner
-        ? this.formatForOwner(q)
-        : this.formatPublic(q);
-
-      return {
-        ...formattedQuestion,
-        assignmentPoints: aq.points,
-        timeLimitMs: aq.timeLimitMs,
-        order: aq.order,
-        showHiddenTests: aq.showHiddenTests,
-      };
+    const questions = await this.questionModel.find({
+      _id: { $in: assignment.questionIds },
     });
+
+    const byId = new Map(questions.map((q) => [q._id.toString(), q]));
+
+    return assignment.questionIds
+      .map((id) => byId.get(id.toString()))
+      .filter((q): q is QuestionDocument => !!q)
+      .map((q) => {
+        const isOwner = userId && q.ownerId.toString() === userId;
+        return isOwner ? this.formatForOwner(q) : this.formatPublic(q);
+      });
   }
 }

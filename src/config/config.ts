@@ -3,6 +3,10 @@ import process from 'process';
 export default () => {
   const nodeEnv = process.env.NODE_ENV;
   const port = process.env.PORT || '3000';
+  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:4200')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
   const mongodbUri = process.env.MONGODB_URI;
   const jwtAccessSecret = process.env.JWT_ACCESS_SECRET;
   const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
@@ -20,6 +24,7 @@ export default () => {
   return {
     nodeEnv,
     port,
+    corsOrigins,
     mongodbUri,
     jwtAccessSecret,
     jwtRefreshSecret,

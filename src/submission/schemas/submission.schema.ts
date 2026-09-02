@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export interface SubmissionTimestamps {
   createdAt: Date;
@@ -60,13 +60,13 @@ export const TestCaseResultSchema =
 
 @Schema({ timestamps: true })
 export class Submission {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Question', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Question', required: true })
   questionId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Assignment' })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Assignment' })
   assignmentId?: Types.ObjectId;
 
   @Prop({ required: true })

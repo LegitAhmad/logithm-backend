@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,8 +31,10 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, cleanupOpenApiDoc(document));
 
+  app.use(cookieParser());
+
   app.enableCors({
-    origin: 'http://localhost:4200', // The URL of your Angular app
+    origin: configService.get<string[]>('corsOrigins'),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

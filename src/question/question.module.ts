@@ -4,15 +4,15 @@ import { Question, QuestionSchema } from './schemas/question.schema';
 import { QuestionService } from './question.service';
 import { QuestionController } from './question.controller';
 import {
-  AssignmentQuestion,
-  AssignmentQuestionSchema,
-} from './schemas/assignment-question.schema';
+  Assignment,
+  AssignmentSchema,
+} from '../assignment/schemas/assignment.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Question.name, schema: QuestionSchema },
-      { name: AssignmentQuestion.name, schema: AssignmentQuestionSchema },
+      { name: Assignment.name, schema: AssignmentSchema },
     ]),
   ],
   providers: [QuestionService],

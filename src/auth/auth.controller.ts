@@ -43,8 +43,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign up a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 409, description: 'Email already exists' })
-  async signup(@Body() body: SignupInputDto) {
-    return await this.authService.signup(body);
+  @ApiCookieAuth('refreshToken')
+  async signup(
+    @Body() body: SignupInputDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return await this.authService.signup(body, res);
   }
 
   @Post('/refresh')

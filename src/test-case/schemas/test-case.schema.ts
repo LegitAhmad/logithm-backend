@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type TestCaseDocument = HydratedDocument<TestCase>;
 
@@ -7,7 +7,7 @@ export type TestCaseDocument = HydratedDocument<TestCase>;
 export class TestCase {
   _id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Question', required: true, index: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Question', required: true, index: true })
   questionId: Types.ObjectId;
 
   @Prop({ type: [Object], required: true })

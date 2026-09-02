@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export interface QuestionTimestamps {
   createdAt: Date;
@@ -84,7 +84,7 @@ export class Question {
   @Prop({ type: [String], default: [] })
   tags: string[];
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   ownerId: Types.ObjectId;
 
   @Prop({ default: false })

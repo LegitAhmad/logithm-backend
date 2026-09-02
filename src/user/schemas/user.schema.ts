@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -40,7 +40,7 @@ export class User {
   avatarUrl?: string;
 
   @Prop({
-    type: [Types.ObjectId],
+    type: [MongooseSchema.Types.ObjectId],
     ref: 'Course',
     default: [],
   })

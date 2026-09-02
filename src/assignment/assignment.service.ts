@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 import {
   Assignment,
@@ -32,7 +32,7 @@ export class AssignmentService {
   /* ---------------------------------- Helpers ---------------------------------- */
 
   private assertOwner(assignment: AssignmentDocument, userId: string) {
-    if (!assignment.ownerId.equals(userId)) {
+    if (assignment.ownerId.toString() !== userId.toString()) {
       throw new ForbiddenException();
     }
   }
@@ -153,7 +153,7 @@ export class AssignmentService {
     // Draft visible only to owner
     if (
       assignment.status === AssignmentStatus.DRAFT &&
-      !assignment.ownerId.equals(userId)
+      assignment.ownerId.toString() !== userId.toString()
     ) {
       throw new ForbiddenException();
     }
@@ -166,7 +166,9 @@ export class AssignmentService {
   async create(dto: CreateAssignmentDto, userId: string) {
     const assignment = await this.assignmentModel.create({
       ...dto,
-      ownerId: userId,
+      courseId: new Types.ObjectId(dto.courseId),
+      questionIds: dto.questionIds?.map((id) => new Types.ObjectId(id)),
+      ownerId: new Types.ObjectId(userId),
       status: AssignmentStatus.DRAFT,
     });
 

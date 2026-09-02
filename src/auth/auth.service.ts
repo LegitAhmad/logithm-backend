@@ -86,12 +86,22 @@ export class AuthService {
       };
   }
 
-  async signup({ email, password }: SignupInputDto) {
-    const user = await this.userService.findByIdentifier(email);
+  async signup(
+    { firstName, lastName, email, password }: SignupInputDto,
+    res: Response,
+  ) {
+    const existing = await this.userService.findByIdentifier(email);
 
-    if (user) throw new ConflictException('User Already Exists');
+    if (existing) throw new ConflictException('User Already Exists');
 
-    return await this.userService.create({ email, password });
+    const user = await this.userService.create({
+      firstName,
+      lastName,
+      email,
+      password,
+    });
+
+    return this.generateTokens(user._id.toString(), res);
   }
 
   logout(res: Response) {
