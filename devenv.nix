@@ -18,11 +18,6 @@
     ];
   };
 
-  services.redis = {
-    enable = true;
-    port = 0;
-    bind = "127.0.0.1";
-  };
 
   scripts.hello.exec = "echo hello from $GREET";
 

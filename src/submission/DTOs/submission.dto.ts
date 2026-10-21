@@ -5,7 +5,7 @@ import { zObjectId } from 'src/utils/zodHelpers';
 export const CreateSubmissionValidator = z.object({
   questionId: zObjectId,
   language: z.string().min(1),
-  code: z.string().min(1),
+  code: z.string().min(1).max(65536),
   assignmentId: zObjectId.optional(),
 });
 
@@ -19,9 +19,10 @@ const TestCaseResultResponseSchema = z.object({
   points: z.number(),
   passed: z.boolean(),
   verdict: z.string().optional(),
-  stdout: z.string().optional(),
   stderr: z.string().optional(),
   compileOutput: z.string().optional(),
+  actualOutput: z.string().optional(),
+  diagnostic: z.string().optional(),
   time: z.string().optional(),
   memory: z.number().optional(),
 });

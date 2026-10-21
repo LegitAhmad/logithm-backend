@@ -4,12 +4,14 @@ import {
   BadRequestException,
   ConflictException,
   InternalServerErrorException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserDocument, RefreshSession } from './schemas/user.schema';
 import { hasher } from 'src/config/hasher';
 import { UpdateUserDto } from './DTOs/user.dto';
+import type { SafeUserProfile } from './DTOs/user.dto';
 import { SupabaseStorageService } from './supabase-storage.service';
 import sharp from 'sharp';
 import { Course, CourseDocument } from 'src/course/schemas/course.schema';
@@ -17,7 +19,7 @@ import { Course, CourseDocument } from 'src/course/schemas/course.schema';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     private readonly supabaseStorage: SupabaseStorageService,
   ) {}
@@ -32,11 +34,11 @@ export class UserService {
     let user: UserDocument | null = null;
 
     if (Types.ObjectId.isValid(identifier)) {
-      user = await this.userModel.findOne({ _id: identifier });
+      user = await this.userModel.findOne({ _id: identifier }).select('+authVersion');
     } else {
       user = await this.userModel.findOne({
         $or: [{ username: identifier }, { email: identifier }],
-      });
+      }).select('+authVersion');
     }
 
     return user;
@@ -61,6 +63,40 @@ export class UserService {
       email,
       passwordHash: passHash,
     });
+  }
+
+  async addRefreshSession(userId: string, session: RefreshSession, authVersion: number) {
+    const result = await this.userModel.updateOne(
+      { _id: userId, authVersion: authVersion === 0 ? { $in: [0, null] } : authVersion },
+      { $push: { refreshSessions: { $each: [session], $slice: -10 } } },
+    );
+    if (result.modifiedCount !== 1) throw new UnauthorizedException('Account credentials changed. Log in again.');
+  }
+
+  async rotateRefreshSession(userId: string, previousHash: string, session: RefreshSession, authVersion: number) {
+    const result = await this.userModel.updateOne(
+      { _id: userId, authVersion: authVersion === 0 ? { $in: [0, null] } : authVersion, refreshSessions: { $elemMatch: { tokenHash: previousHash, expiresAt: { $gt: new Date() } } } },
+      { $set: { 'refreshSessions.$': session } },
+    );
+    if (result.modifiedCount !== 1) throw new UnauthorizedException('Refresh token expired, revoked, or already used');
+  }
+
+  async revokeRefreshSession(userId: string, tokenHash: string) {
+    await this.userModel.updateOne({ _id: userId }, { $pull: { refreshSessions: { tokenHash } } });
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user?.passwordHash || !(await hasher.verify(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    if (await hasher.verify(newPassword, user.passwordHash)) throw new BadRequestException('Choose a different new password');
+    const passwordHash = await hasher.hash(newPassword);
+    const result = await this.userModel.updateOne(
+      { _id: userId, passwordHash: user.passwordHash },
+      { $set: { passwordHash, refreshSessions: [] }, $inc: { authVersion: 1 } },
+    );
+    if (result.modifiedCount !== 1) throw new UnauthorizedException('Account credentials changed. Log in again.');
   }
 
   /*
@@ -90,19 +126,33 @@ export class UserService {
    * SELF USER METHODS
    * -------------------------------------
    */
+  private formatProfile(user: User & { _id: Types.ObjectId }): SafeUserProfile {
+    return {
+      _id: user._id.toString(),
+      username: user.username,
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+      favorites: user.favorites.map(id => id.toString()),
+      isVerified: user.isVerified,
+      avatarUploadEnabled: this.supabaseStorage.isConfigured,
+    };
+  }
 
-  async findByIdSafe(userId: string) {
+
+  async findByIdSafe(userId: string): Promise<SafeUserProfile> {
     if (!Types.ObjectId.isValid(userId)) {
       throw new BadRequestException('Invalid user id');
     }
 
     const user = await this.userModel
       .findById(userId)
-      .select('-passwordHash -__v')
+      .select('-passwordHash -authVersion -refreshSessions -__v')
       .lean();
 
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    return this.formatProfile(user);
   }
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
@@ -131,7 +181,7 @@ export class UserService {
 
     if (!updated) throw new NotFoundException('User not found');
 
-    return updated;
+    return this.formatProfile(updated);
   }
 
   /*
@@ -159,7 +209,7 @@ export class UserService {
 
     if (!updated) throw new NotFoundException('User not found');
 
-    return updated;
+    return this.formatProfile(updated);
   }
 
   async uploadAvatar(
@@ -259,9 +309,10 @@ export class UserService {
       throw new BadRequestException('Invalid course id');
     }
 
-    const courseExists = await this.courseModel.exists({ _id: courseId });
-    if (!courseExists) {
-      throw new NotFoundException('Course not found');
+    const course = await this.courseModel.findById(courseId);
+    if (!course) throw new NotFoundException('Course not found');
+    if (course.creatorId.toString() !== userId && !course.admins.some(id => id.toString() === userId) && !course.students.some(id => id.toString() === userId)) {
+      throw new BadRequestException('Course membership required');
     }
 
     const updated = await this.userModel

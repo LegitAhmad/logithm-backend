@@ -1,0 +1,30 @@
+# RUN ONLY ON A DEDICATED, DISPOSABLE EXECUTION HOST, NEVER THE API/DB HOST.
+# Piston requires privileged access and cgroup v2: a container is NOT a VM-level
+# security boundary. Do not place application secrets, credentials, host mounts,
+# Docker sockets, or other workloads on this host. See upstream requirements:
+# https://github.com/engineer-man/piston#installation
+name: logithm-executor
+services:
+  piston:
+    image: ${PISTON_IMAGE:?Set a reviewed Logithm Piston image built with deployments/piston.Dockerfile}
+    restart: unless-stopped
+    privileged: true
+    cgroup: private
+    environment:
+      PISTON_OUTPUT_MAX_SIZE: 2097152
+      PISTON_MAX_CONCURRENT_JOBS: 4
+    ports:
+      # Loopback only by default. A private VPN address may be explicitly used;
+      # firewall it to the API host and trusted package administration only.
+      - '${PISTON_BIND_ADDRESS:-127.0.0.1}:${PISTON_PORT:-2000}:2000'
+    volumes:
+      - piston_packages:/piston/packages
+    tmpfs:
+      - /tmp:exec,size=1g
+    mem_limit: 2g
+    cpus: 2.0
+    pids_limit: 512
+    stop_grace_period: 30s
+
+volumes:
+  piston_packages:

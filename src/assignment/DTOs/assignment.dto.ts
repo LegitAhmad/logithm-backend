@@ -10,7 +10,7 @@ export const CreateAssignmentSchema = z.object({
   courseId: zObjectId,
 
   questionIds: z.array(zObjectId).optional(),
-});
+}).strict();
 
 export class CreateAssignmentDto extends createZodDto(CreateAssignmentSchema) {}
 
@@ -65,6 +65,7 @@ export class AssignmentQueryDto extends createZodDto(AssignmentQuerySchema) {}
 
 export const AssignmentResponseSchema = z.object({
   _id: z.string(),
+  ownerId: z.string(),
 
   title: z.string(),
   description: z.string().nullable(),

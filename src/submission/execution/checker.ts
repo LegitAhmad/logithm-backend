@@ -1,34 +1,28 @@
-export interface CheckerConfig {
-  type: 'exact' | 'float' | 'custom';
-  tolerance?: number;
+import type { Checker } from '../../question/execution-contract';
+
+/** JSON structural equality: object insertion order is irrelevant; array order is not. */
+export function structurallyEqual(actual: unknown, expected: unknown): boolean {
+  if (actual === expected) return true;
+  if (!actual || !expected || typeof actual !== 'object' || typeof expected !== 'object') return false;
+  if (Array.isArray(actual) || Array.isArray(expected)) {
+    return Array.isArray(actual) && Array.isArray(expected) && actual.length === expected.length && actual.every((value, index) => structurallyEqual(value, expected[index]));
+  }
+  const actualKeys = Object.keys(actual);
+  const expectedKeys = Object.keys(expected);
+  const a = actual as Record<string, unknown>;
+  const e = expected as Record<string, unknown>;
+  return actualKeys.length === expectedKeys.length && actualKeys.every((key) => Object.hasOwn(e, key) && structurallyEqual(a[key], e[key]));
 }
 
-const DEFAULT_FLOAT_TOLERANCE = 1e-6;
+export function checkValue(checker: Exclude<Checker, { type: 'custom' }>, actual: unknown, expected: unknown): boolean {
+  if (checker.type === 'float') return typeof actual === 'number' && typeof expected === 'number' && Number.isFinite(actual) && Number.isFinite(expected) && Math.abs(actual - expected) <= checker.tolerance;
+  return structurallyEqual(actual, expected);
+}
 
-/**
- * Compares actual program output against the expected output for a test case.
- *
- * 'custom' checkers are not implemented: running a checker script requires the
- * same sandboxing as the submission itself, which is a separate piece of work.
- * They currently fall back to exact comparison.
- */
-export function checkOutput(
-  checker: CheckerConfig | undefined,
-  actual: string,
-  expected: string,
-): boolean {
-  const a = (actual ?? '').trim();
-  const e = (expected ?? '').trim();
-
-  if (checker?.type === 'float') {
-    const actualNum = Number(a);
-    const expectedNum = Number(e);
-
-    if (Number.isNaN(actualNum) || Number.isNaN(expectedNum)) return false;
-
-    const tolerance = checker.tolerance ?? DEFAULT_FLOAT_TOLERANCE;
-    return Math.abs(actualNum - expectedNum) <= tolerance;
+export function decodeEnvelope(stdout: string): unknown {
+  const envelope: unknown = JSON.parse(stdout);
+  if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope) || !('version' in envelope) || envelope.version !== 1 || !('value' in envelope) || Object.keys(envelope).length !== 2) {
+    throw new Error('Missing typed return envelope');
   }
-
-  return a === e;
+  return envelope.value;
 }

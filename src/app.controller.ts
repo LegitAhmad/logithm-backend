@@ -6,7 +6,17 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getServiceInfo() {
+    return { service: 'logithm-api', version: '1.0' };
+  }
+
+  @Get('health/live')
+  getLiveness() {
+    return { status: 'ok' };
+  }
+
+  @Get('health/ready')
+  getReadiness() {
+    return this.appService.getReadiness();
   }
 }

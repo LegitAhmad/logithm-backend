@@ -19,6 +19,7 @@ import {
   PublishAssignmentDto,
   UpdateAssignmentDto,
 } from './DTOs/assignment.dto';
+import { ResourceAccessService } from '../access/resource-access.service';
 
 type AssignmentRealStatus = 'draft' | 'pending' | 'active' | 'missed';
 
@@ -27,6 +28,7 @@ export class AssignmentService {
   constructor(
     @InjectModel(Assignment.name)
     private readonly assignmentModel: Model<Assignment>,
+    private readonly access: ResourceAccessService,
   ) {}
 
   /* ---------------------------------- Helpers ---------------------------------- */
@@ -55,6 +57,7 @@ export class AssignmentService {
 
     return {
       _id: assignment._id.toString(),
+      ownerId: assignment.ownerId.toString(),
       title: assignment.title,
       description: assignment.description ?? null,
       courseId: assignment.courseId.toString(),
@@ -120,6 +123,7 @@ export class AssignmentService {
     };
 
     if (query?.courseId) {
+      await this.access.courseAccess(query.courseId, userId);
       criteria.courseId = query.courseId;
     }
 
@@ -132,10 +136,11 @@ export class AssignmentService {
     return refinedList;
   }
 
-  async getByCourse(courseId: string, query?: AssignmentQueryDto) {
+  async getByCourse(courseId: string, userId: string, query?: AssignmentQueryDto) {
+    const { teacher } = await this.access.courseAccess(courseId, userId);
     const list = await this.assignmentModel.find({
       courseId,
-      status: { $ne: AssignmentStatus.DRAFT },
+      $or: teacher ? [{ status: { $ne: AssignmentStatus.DRAFT } }, { ownerId: userId }] : [{ status: { $ne: AssignmentStatus.DRAFT } }],
     });
 
     return this.paginateAssignments(list as AssignmentDocument[], query).map(
@@ -150,13 +155,7 @@ export class AssignmentService {
       throw new NotFoundException();
     }
 
-    // Draft visible only to owner
-    if (
-      assignment.status === AssignmentStatus.DRAFT &&
-      assignment.ownerId.toString() !== userId.toString()
-    ) {
-      throw new ForbiddenException();
-    }
+    await this.access.assertAssignmentAccess(assignment, userId);
 
     return this.format(assignment as AssignmentDocument);
   }
@@ -164,8 +163,11 @@ export class AssignmentService {
   /* --------------------------------- Mutations --------------------------------- */
 
   async create(dto: CreateAssignmentDto, userId: string) {
+    await this.access.assertCourseTeacher(dto.courseId, userId);
+    await this.access.assertAttachableQuestions(dto.questionIds ?? [], userId);
     const assignment = await this.assignmentModel.create({
-      ...dto,
+      title: dto.title,
+      description: dto.description,
       courseId: new Types.ObjectId(dto.courseId),
       questionIds: dto.questionIds?.map((id) => new Types.ObjectId(id)),
       ownerId: new Types.ObjectId(userId),
@@ -181,12 +183,16 @@ export class AssignmentService {
     if (!assignment) throw new NotFoundException();
 
     this.assertOwner(assignment as AssignmentDocument, userId);
+    await this.access.assertCourseTeacher(assignment.courseId.toString(), userId);
+    if (dto.questionIds) await this.access.assertAttachableQuestions(dto.questionIds, userId);
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Only drafts can be edited');
     }
 
-    Object.assign(assignment, dto);
+    if (dto.title !== undefined) assignment.title = dto.title;
+    if (dto.description !== undefined) assignment.description = dto.description;
+    if (dto.questionIds !== undefined) assignment.questionIds = dto.questionIds.map(id => new Types.ObjectId(id));
 
     await assignment.save();
 
@@ -199,6 +205,9 @@ export class AssignmentService {
     if (!assignment) throw new NotFoundException();
 
     this.assertOwner(assignment as AssignmentDocument, userId);
+    await this.access.assertCourseTeacher(assignment.courseId.toString(), userId);
+    await this.access.assertAttachableQuestions(assignment.questionIds.map(String), userId);
+    if (!assignment.questionIds.length) throw new BadRequestException('Add at least one question before publishing');
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Already published');
@@ -240,6 +249,7 @@ export class AssignmentService {
     if (!assignment) throw new NotFoundException();
 
     this.assertOwner(assignment as AssignmentDocument, userId);
+    await this.access.assertCourseTeacher(assignment.courseId.toString(), userId);
 
     if (assignment.status !== AssignmentStatus.PUBLISHED) {
       throw new BadRequestException('Cannot unpublish now');
@@ -266,6 +276,7 @@ export class AssignmentService {
     if (!assignment) throw new NotFoundException();
 
     this.assertOwner(assignment as AssignmentDocument, userId);
+    await this.access.assertCourseTeacher(assignment.courseId.toString(), userId);
 
     if (assignment.status !== AssignmentStatus.DRAFT) {
       throw new BadRequestException('Only drafts can be deleted');

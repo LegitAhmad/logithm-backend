@@ -1,28 +1,18 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 
-const TestCaseValidator = z.object({
-  input: z.string().min(1),
-  expectedOutput: z.string().min(1),
-  isHidden: z.boolean().optional(),
-  points: z.number().min(1).optional(),
-});
+import { CheckerValidator, ExecutionValidator, TestCaseValidator, gradingIssues } from '../execution-contract';
 
-const CheckerValidator = z.object({
-  type: z.enum(['exact', 'float', 'custom']),
-  tolerance: z.number().positive().optional(),
-  code: z.string().optional(),
-});
-
-export const CreateQuestionValidator = z.object({
+const QuestionFieldsValidator = z.object({
   title: z.string().min(3).max(100),
   descriptionMd: z.string().min(10),
 
   functionSignature: z.string().min(3),
+  execution: ExecutionValidator,
 
   constraints: z.string().optional(),
 
-  testCases: z.array(TestCaseValidator).min(1),
+  testCases: z.array(TestCaseValidator).min(1).max(100),
 
   checker: CheckerValidator.optional(),
 
@@ -40,7 +30,12 @@ export const CreateQuestionValidator = z.object({
   isPublic: z.boolean().optional(),
 });
 
-export const UpdateQuestionValidator = CreateQuestionValidator.partial();
+export const CreateQuestionValidator = QuestionFieldsValidator.superRefine((definition, ctx) => {
+  for (const issue of gradingIssues(definition)) ctx.addIssue({ code: 'custom', ...issue });
+});
+
+// Partial updates are checked against the stored, merged definition in the service.
+export const UpdateQuestionValidator = QuestionFieldsValidator.partial();
 
 export class CreateQuestionDto extends createZodDto(CreateQuestionValidator) {}
 
@@ -58,6 +53,7 @@ export const QuestionResponseSchema = z.object({
   title: z.string(),
   descriptionMd: z.string(),
   functionSignature: z.string(),
+  execution: ExecutionValidator.optional(),
   constraints: z.string().optional(),
   testCases: z.array(PublicTestCaseSchema),
   difficulty: z.enum(['easy', 'medium', 'hard']),

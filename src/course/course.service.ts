@@ -118,6 +118,7 @@ export class CourseService {
   }
 
   async getCourseById(id: string, requesterId: string) {
+    if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid course id');
     const course = await this.courseModel.findById(id).exec();
     if (!course) throw new NotFoundException('Course not found');
 
@@ -175,9 +176,12 @@ export class CourseService {
   }
 
   async enrollByCode(joinCode: string, userId: string) {
+    if (typeof joinCode !== 'string' || !/^[A-Za-z0-9]{8}$/.test(joinCode.trim())) {
+      throw new BadRequestException('Enter an eight-character course join code');
+    }
     const userObjectId = new Types.ObjectId(userId);
     const course = await this.courseModel.findOneAndUpdate(
-      { joinCode: joinCode.toUpperCase() },
+      { joinCode: joinCode.trim().toUpperCase() },
       { $addToSet: { students: userObjectId } },
       { new: true },
     );
@@ -211,7 +215,7 @@ export class CourseService {
     }
 
     const target = new Types.ObjectId(targetUserId);
-    course.admins.push(target);
+    if (!course.admins.some(id => id.equals(target))) course.admins.push(target);
     return await course.save();
   }
 

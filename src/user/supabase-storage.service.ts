@@ -26,6 +26,10 @@ export class SupabaseStorageService {
         : null;
   }
 
+  get isConfigured(): boolean {
+    return this.client !== null;
+  }
+
   async uploadProfilePicture(userId: string, webpBuffer: Buffer) {
     console.log('[supabase.uploadProfilePicture] start', {
       userId,

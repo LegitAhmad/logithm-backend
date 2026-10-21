@@ -7,9 +7,11 @@ import {
   Assignment,
   AssignmentSchema,
 } from '../assignment/schemas/assignment.schema';
+import { AccessModule } from '../access/access.module';
 
 @Module({
   imports: [
+    AccessModule,
     MongooseModule.forFeature([
       { name: Question.name, schema: QuestionSchema },
       { name: Assignment.name, schema: AssignmentSchema },

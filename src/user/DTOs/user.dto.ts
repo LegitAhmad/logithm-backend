@@ -2,7 +2,6 @@ import z from 'zod';
 import {
   username,
   email,
-  passwordHash,
   isVerified,
   firstName,
   lastName,
@@ -17,15 +16,26 @@ export const UserValidator = z.object({
   firstName: firstName,
   lastName: lastName,
   avatarUrl: z.url().optional(),
-  passwordHash: passwordHash,
   favorites: z.array(zObjectId).default([]),
   isVerified: isVerified,
 });
 
 export class UserDto extends createZodDto(UserValidator) {}
 
-export const UpdateUserSchema = UserValidator.partial();
-export class UpdateUserDto extends createZodDto(UserValidator.partial()) {}
+export interface SafeUserProfile {
+  _id: string;
+  username?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl?: string;
+  favorites: string[];
+  isVerified: boolean;
+  avatarUploadEnabled: boolean;
+}
+
+export const UpdateUserSchema = UserValidator.pick({ username: true, firstName: true, lastName: true }).partial().strict();
+export class UpdateUserDto extends createZodDto(UpdateUserSchema) {}
 
 export const UpdateAvatarSchema = z.object({
   avatarUrl: z.url(),

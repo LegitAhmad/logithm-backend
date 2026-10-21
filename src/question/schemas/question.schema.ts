@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+import type { ExecutionContract } from '../execution-contract';
 
 export interface QuestionTimestamps {
   createdAt: Date;
@@ -49,6 +50,9 @@ export const CheckerConfigSchema = SchemaFactory.createForClass(CheckerConfig);
 
 @Schema({ timestamps: true })
 export class Question {
+  declare createdAt: Date;
+  declare updatedAt: Date;
+
   @Prop({ required: true, trim: true })
   title: string;
 
@@ -57,6 +61,10 @@ export class Question {
 
   @Prop({ required: true })
   functionSignature: string;
+
+  // Optional in storage only so legacy questions remain editable for migration.
+  @Prop({ type: MongooseSchema.Types.Mixed })
+  execution?: ExecutionContract;
 
   @Prop()
   constraints?: string;

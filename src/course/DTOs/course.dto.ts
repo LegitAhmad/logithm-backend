@@ -46,7 +46,14 @@ export const CreateCourseSchema = BaseCourse.omit({
   creatorId: true,
   isActive: true,
   createdAt: true,
-});
+})
+  // description and bannerUrl have schema-level defaults in Mongoose, so the
+  // client is not required to send them (the course-creation modal does not).
+  .extend({
+    description: BaseCourse.shape.description.optional(),
+    bannerUrl: BaseCourse.shape.bannerUrl.optional(),
+  })
+  .strict();
 
 export class CreateCourseDto extends createZodDto(CreateCourseSchema) {}
 export class UpdateCourseDto extends createZodDto(

@@ -3,12 +3,22 @@ import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type UserDocument = HydratedDocument<User>;
 
+@Schema({ _id: false })
+export class RefreshSession {
+  @Prop({ required: true })
+  tokenHash: string;
+
+  @Prop({ required: true })
+  expiresAt: Date;
+}
+const RefreshSessionSchema = SchemaFactory.createForClass(RefreshSession);
+
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ trim: true, minLength: 3, maxLength: 24 })
+  @Prop({ trim: true, minLength: 1, maxLength: 40 })
   firstName: string;
 
-  @Prop({ trim: true, minLength: 3, maxLength: 24 })
+  @Prop({ trim: true, minLength: 1, maxLength: 40 })
   lastName: string;
 
   @Prop({
@@ -35,6 +45,12 @@ export class User {
 
   @Prop({ trim: true, required: false })
   passwordHash: string;
+
+  @Prop({ type: Number, default: 0, select: false })
+  authVersion: number;
+
+  @Prop({ type: [RefreshSessionSchema], default: [], select: false })
+  refreshSessions: RefreshSession[];
 
   @Prop({ trim: true, required: false })
   avatarUrl?: string;

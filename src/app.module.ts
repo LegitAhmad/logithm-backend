@@ -9,7 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { CourseModule } from './course/course.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { QuestionModule } from './question/question.module';
-import { TestCaseModule } from './test-case/test-case.module';
 import { SubmissionModule } from './submission/submission.module';
 
 @Module({
@@ -17,12 +16,14 @@ import { SubmissionModule } from './submission/submission.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [config],
-      expandVariables: true,
+      cache: true,
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('mongodbUri'),
+        uri: configService.getOrThrow<string>('mongodbUri'),
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000,
       }),
     }),
     UserModule,
@@ -30,7 +31,6 @@ import { SubmissionModule } from './submission/submission.module';
     CourseModule,
     AssignmentModule,
     QuestionModule,
-    TestCaseModule,
     SubmissionModule,
   ],
   controllers: [AppController],

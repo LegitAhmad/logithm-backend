@@ -17,10 +17,10 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:execution": "node -r ts-node/register test/smoke-typed-grading.ts",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@nestjs/bull": "^11.0.4",
     "@nestjs/common": "^11.1.12",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.12",
@@ -32,10 +32,8 @@
     "@supabase/supabase-js": "^2.103.3",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
-    "ioredis": "^5.11.1",
     "mongoose": "^8.18.0",
     "nestjs-zod": "^5.1.1",
-    "node-gyp": "^12.2.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",

@@ -54,7 +54,7 @@ export class CourseController {
   })
   @ApiResponse({ status: 409, description: 'Failed to create course' })
   async create(
-    @Body() createCourseDto: CreateCourseDto,
+    @Body(new ZodValidationPipe(CreateCourseDto)) createCourseDto: CreateCourseDto,
     @CurrentUser() user: UserDto,
   ) {
     const course = await this.courseService.create(createCourseDto, user._id);
@@ -140,7 +140,7 @@ export class CourseController {
   @ApiResponse({ status: 404, description: 'Course not found' })
   async update(
     @Param('id') id: string,
-    @Body() updateCourseDto: UpdateCourseDto,
+    @Body(new ZodValidationPipe(UpdateCourseDto)) updateCourseDto: UpdateCourseDto,
     @CurrentUser() user: UserDto,
   ): Promise<CourseResponseDto> {
     const updatedCourse = await this.courseService.update(

@@ -40,13 +40,16 @@ export class TestCaseResult {
   verdict?: string;
 
   @Prop()
-  stdout?: string;
-
-  @Prop()
   stderr?: string;
 
   @Prop()
   compileOutput?: string;
+
+  @Prop()
+  actualOutput?: string;
+
+  @Prop()
+  diagnostic?: string;
 
   @Prop()
   time?: string;

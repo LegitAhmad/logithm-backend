@@ -4,11 +4,15 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
 import cookieParser from 'cookie-parser';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  app.useBodyParser('json', { limit: '6mb' });
   const configService = app.get(ConfigService);
-  const port = configService.get<string>('port');
+  const port = configService.getOrThrow<number>('port');
+
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle('Logithm API')
@@ -31,7 +35,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, cleanupOpenApiDoc(document));
 
-  app.use(cookieParser());
+  app.enableShutdownHooks();
 
   app.enableCors({
     origin: configService.get<string[]>('corsOrigins'),
@@ -39,7 +43,11 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(port!);
-  console.log(`The server is running at port ${port}.`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`The server is listening on port ${port}.`);
 }
-void bootstrap();
+void bootstrap().catch(() => {
+  // Nest logs startup failures; do not dump config values or connection strings.
+  console.error('Startup failed. Check required configuration, MongoDB connectivity and port availability.');
+  process.exitCode = 1;
+});

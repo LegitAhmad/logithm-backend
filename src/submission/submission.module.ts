@@ -6,9 +6,11 @@ import { Submission, SubmissionSchema } from './schemas/submission.schema';
 import { SubmissionController } from './submission.controller';
 import { SubmissionService } from './submission.service';
 import { PistonClientService } from './execution/piston-client.service';
+import { AccessModule } from '../access/access.module';
 
 @Module({
   imports: [
+    AccessModule,
     MongooseModule.forFeature([
       { name: Submission.name, schema: SubmissionSchema },
       { name: Question.name, schema: QuestionSchema },

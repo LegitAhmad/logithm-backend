@@ -66,9 +66,10 @@ export class AssignmentController {
   })
   getCourseAssignments(
     @Param('id') courseId: string,
+    @CurrentUser() user: UserDto,
     @Query(new ZodValidationPipe(AssignmentQueryDto)) query: AssignmentQueryDto,
   ) {
-    return this.assignmentService.getByCourse(courseId, query);
+    return this.assignmentService.getByCourse(courseId, user._id, query);
   }
 
   /**
@@ -97,7 +98,7 @@ export class AssignmentController {
     description: 'The assignment draft has been created.',
     type: AssignmentResponseDto,
   })
-  create(@Body() dto: CreateAssignmentDto, @CurrentUser() user: UserDto) {
+  create(@Body(new ZodValidationPipe(CreateAssignmentDto)) dto: CreateAssignmentDto, @CurrentUser() user: UserDto) {
     return this.assignmentService.create(dto, user._id);
   }
 
@@ -115,7 +116,7 @@ export class AssignmentController {
   @ApiResponse({ status: 400, description: 'Only drafts can be edited' })
   update(
     @Param('id') id: string,
-    @Body() dto: UpdateAssignmentDto,
+    @Body(new ZodValidationPipe(UpdateAssignmentDto)) dto: UpdateAssignmentDto,
     @CurrentUser() user: UserDto,
   ) {
     return this.assignmentService.updateDraft(id, dto, user._id);
@@ -134,7 +135,7 @@ export class AssignmentController {
   })
   publish(
     @Param('id') id: string,
-    @Body() dto: PublishAssignmentDto,
+    @Body(new ZodValidationPipe(PublishAssignmentDto)) dto: PublishAssignmentDto,
     @CurrentUser() user: UserDto,
   ) {
     return this.assignmentService.publish(id, dto, user._id);

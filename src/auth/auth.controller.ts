@@ -21,6 +21,8 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
+import { ChangePasswordDto } from './DTOs/change-password.dto';
+import { CurrentUser } from '../utils/decorators/create-param.decorator';
 @ApiTags('auth')
 @Controller('/auth')
 @UsePipes(ZodValidationPipe)
@@ -66,12 +68,23 @@ export class AuthController {
   }
 
   @Post('/logout')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Invalidate all refresh tokens' })
+  @ApiOperation({ summary: 'Revoke the current refresh session and clear its cookie' })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
-  logout(@Res({ passthrough: true }) res: Response) {
-    this.authService.logout(res);
+  async logout(@Res({ passthrough: true }) res: Response) {
+    const req = res.req as { cookies?: Record<string, string> } | undefined;
+    await this.authService.logout(res, req?.cookies?.refreshToken);
     return { message: 'Logged out successfully' };
+  }
+
+  @Post('/password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('jwt-auth')
+  @ApiOperation({ summary: 'Change password and revoke all sessions' })
+  changePassword(
+    @CurrentUser('_id') userId: string,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.authService.changePassword(userId, dto.currentPassword, dto.newPassword, res);
   }
 }

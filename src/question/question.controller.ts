@@ -54,9 +54,17 @@ export class QuestionController {
     return this.questionService.findByOwner(user._id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('public')
+  @ApiOperation({ summary: 'Browse public questions' })
+  getPublic() {
+    return this.questionService.findPublic();
+  }
+
   /**
    * Retrieves all questions for a specific assignment.
    */
+  @UseGuards(JwtAuthGuard)
   @Get('assignment/:assignmentId')
   @ApiOperation({ summary: 'Get questions for an assignment' })
   @ApiResponse({
@@ -74,6 +82,7 @@ export class QuestionController {
    * Retrieves a single question by its ID.
    * Public questions are accessible to everyone; private ones only to the owner.
    */
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Get question details' })
   @ApiResponse({ status: 200, description: 'Question details returned' })
